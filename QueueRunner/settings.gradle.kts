@@ -24,4 +24,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Queue Runner"
 include(":app")
- 
+include(":a2dg")

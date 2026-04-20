@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Queue Runner</string>
+    <string name="start_QueueRunner">Start Queue Runner</string>
 </resources>
