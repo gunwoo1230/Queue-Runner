@@ -10,10 +10,6 @@ android {
         }
     }
 
-    buildFeatures {
-        viewBinding = true
-    }
-
     defaultConfig {
         minSdk = 24
 
@@ -37,7 +33,6 @@ android {
 }
 
 dependencies {
-    implementation(project(":a2dg"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
