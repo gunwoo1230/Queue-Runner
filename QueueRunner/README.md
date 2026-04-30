@@ -56,17 +56,17 @@
 - [x] 프로젝트 생성 및 ViewBinding 적용
 - [x] 타이틀 화면(MainActivity) 및 게임 화면(GameActivity) 생성
 - [x] app 모듈에 a2dg 모듈 의존성 연결 (build.gradle.kts, settings.gradle.kts)
-- [ ] GameActivity를 BaseGameActivity로 상속 및 화면 가로(Landscape) 고정
-- [ ] 빈 MainScene 생성 및 root scene 설정
+- [x] GameActivity를 BaseGameActivity로 상속 및 화면 가로(Landscape) 고정
+- [x] 빈 MainScene 생성 및 root scene 설정
 
 **4주차: 커맨드 밀어내기 시스템 및 Side-View 이동로직 구현**
 
 - 2슬롯 커맨드 밀어내기 (Queue) 시스템 구현
-- [ ] 화면 하단에 O 버튼, X 버튼 UI 추가 (터치 이벤트 연결)
-- [ ] 입력된 커맨드를 저장할 길이 2짜리 Queue(또는 List) 자료구조 구현
-- [ ] 버튼 클릭 시 Queue에 데이터 삽입 및 밀어내기 로직 구현 (가장 오래된 데이터 삭제)
-- [ ] 현재 Queue 상태(행동칸 2칸)를 화면에 텍스트 또는 간단한 UI로 표시
-- [ ] Queue에 데이터가 2개 찼을 때 완성된 커맨드(ex: O+X)를 반환하는 함수 구현
+- [x] 화면 하단에 O 버튼, X 버튼 UI 추가 (터치 이벤트 연결)
+- [x] 입력된 커맨드를 저장할 길이 2짜리 Queue(또는 List) 자료구조 구현
+- [x] 버튼 클릭 시 Queue에 데이터 삽입 및 밀어내기 로직 구현 (가장 오래된 데이터 삭제)
+- [x] 현재 Queue 상태(행동칸 2칸)를 화면에 텍스트 또는 간단한 UI로 표시
+- [x] Queue에 데이터가 2개 찼을 때 완성된 커맨드(ex: O+X)를 반환하는 함수 구현
 
 - 기본 캐릭터 생성 및 Side-View 이동로직
 - [ ] Player 클래스 생성 및 MainScene 배치 (일단 간단한 사각형 도형으로 시작)
