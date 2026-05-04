@@ -9,11 +9,14 @@ import kr.ac.tukorea.ge.spgp2026.a2dg.objects.IGameObject
 import kr.ac.tukorea.ge.spgp2026.a2dg.util.LabelUtil
 import kr.ac.tukorea.ge.spgp2026.a2dg.view.GameContext
 
-class CommandController(private val gctx: GameContext) : IGameObject {
+class CommandController(
+    private val gctx: GameContext,
+    private val player: Player,
+) : IGameObject {
     // 커맨드 종류
     enum class Command { O, X }
 
-    // 기획서 반영: 2슬롯 밀어내기 큐
+    // 2슬롯 밀어내기 큐
     private val queue = mutableListOf<Command>()
 
     // 화면 하단 버튼 영역 (가상 해상도 1600x900 기준)
@@ -30,6 +33,8 @@ class CommandController(private val gctx: GameContext) : IGameObject {
     }
 
     override fun draw(canvas: Canvas) {
+        // ToDo: 텍스트가 아닌 그림으로 그리기
+
         // 1. O, X 버튼 그리기
         canvas.drawRoundRect(btnORect, 30f, 30f, btnPaint)
         canvas.drawRoundRect(btnXRect, 30f, 30f, btnPaint)
@@ -38,7 +43,7 @@ class CommandController(private val gctx: GameContext) : IGameObject {
         labelUtilBtn.draw(canvas, "O", btnORect.centerX(), btnORect.centerY() + 35f)
         labelUtilBtn.draw(canvas, "X", btnXRect.centerX(), btnXRect.centerY() + 35f)
 
-        // 3. 기획서 반영: 현재 Queue 상태 화면에 표시
+        // 3. 현재 Queue 상태 화면에 표시
         val slot1 = queue.getOrNull(0)?.name ?: "_"
         val slot2 = queue.getOrNull(1)?.name ?: "_"
         labelUtilQueue.draw(canvas, "CMD: [ $slot1 ] [ $slot2 ]", 800f, 200f)
@@ -60,7 +65,7 @@ class CommandController(private val gctx: GameContext) : IGameObject {
         return false
     }
 
-    // 기획서 핵심: 밀어내기(Queue) 로직
+    // 밀어내기(Queue) 로직
     private fun pushCommand(cmd: Command) {
         // 큐가 2칸 꽉 찼으면 가장 오래된(앞쪽, index 0) 데이터를 삭제
         if (queue.size >= 2) {
@@ -75,7 +80,7 @@ class CommandController(private val gctx: GameContext) : IGameObject {
     }
 
     private fun fireCommand(cmd1: Command, cmd2: Command) {
-        // TODO: 나중에 Player 클래스를 만들면 여기서 Player의 이동 함수를 호출합니다!
-        println("행동 발동! 입력된 조합: $cmd1 + $cmd2")
+        val combo = "${cmd1.name}${cmd2.name}"  // "OO", "OX", "XO", "XX"
+        player.enqueueCombo(combo)
     }
 }
