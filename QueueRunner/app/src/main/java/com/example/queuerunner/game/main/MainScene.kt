@@ -24,9 +24,8 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
 
     // 쿠키런 배경 사용 -> 후에 수정
     private val backgrounds = listOf(
-        HorzScrollBackground(gctx, R.mipmap.cookie_run_bg_1, 0f) to 0.3f,
-        HorzScrollBackground(gctx, R.mipmap.cookie_run_bg_2, 0f) to 0.6f,
-        HorzScrollBackground(gctx, R.mipmap.cookie_run_bg_3, 0f) to 1.0f,
+        HorzScrollBackground(gctx, R.mipmap.gurubox_bg, 0f) to 0.3f,
+        HorzScrollBackground(gctx, R.mipmap.gurubox_bg_middle, 0f) to 1.0f,
     )
 
     // player.virtualX 의 이전 프레임 값 : 매 프레임 delta 를 구하기 위해 사용

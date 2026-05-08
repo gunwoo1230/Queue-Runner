@@ -15,8 +15,8 @@ class Player(private val gctx: GameContext) : IGameObject, IBoxCollidable {
 
     // --- 화면 렌더링용 고정/가변 좌표 ---
     // 캐릭터는 화면상 X 위치가 고정된 채, 배경이 밀려나는 방식으로 이동 표현
-    private val screenX = 300f
-    private val groundY = 700f
+    private val screenX = 400f
+    private val groundY = 800f
     private var screenY = groundY
 
     // --- 배경 스크롤용 가상 X 좌표 ---
