@@ -53,6 +53,7 @@ class Player(private val gctx: GameContext) : IGameObject, IBoxCollidable {
     fun enqueueCombo(combo: String) {
         commandQueue.add(combo)
     }
+    fun canAcceptCommand(): Boolean = !isJumping || commandQueue.isEmpty()
 
     // -------------------------------------------------------------------------
     // IGameObject 구현

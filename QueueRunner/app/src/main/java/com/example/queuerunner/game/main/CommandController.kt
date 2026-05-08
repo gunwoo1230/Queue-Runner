@@ -67,6 +67,7 @@ class CommandController(
 
     // 밀어내기(Queue) 로직
     private fun pushCommand(cmd: Command) {
+        if (!player.canAcceptCommand()) return
         // 큐가 2칸 꽉 찼으면 가장 오래된(앞쪽, index 0) 데이터를 삭제
         if (queue.size >= 2) {
             queue.removeAt(0)
