@@ -1,9 +1,8 @@
 package com.example.queuerunner.game.main
 
 import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
 import android.graphics.RectF
+import com.example.queuerunner.R
 import kr.ac.tukorea.ge.spgp2026.a2dg.objects.IBoxCollidable
 import kr.ac.tukorea.ge.spgp2026.a2dg.objects.IGameObject
 import kr.ac.tukorea.ge.spgp2026.a2dg.view.GameContext
@@ -44,7 +43,7 @@ class Janitor(
         private set
 
     // 화면 그리기 도구. 임시로 파란 사각형을 사용하고, 추후 스프라이트로 교체한다.
-    private val paint = Paint().apply { color = Color.rgb(50, 90, 200) }
+    private val bitmap = gctx.res.getBitmap(R.mipmap.gurubox_janitor)
     private val rect = RectF()
 
     // IBoxCollidable: 충돌 검사용 사각형으로 그림용 rect 를 그대로 재사용한다.
@@ -87,7 +86,7 @@ class Janitor(
             screenX + HALF_WIDTH,
             groundY,
         )
-        canvas.drawRect(rect, paint)
+        canvas.drawBitmap(bitmap, null, rect, null)
     }
 
     companion object {
@@ -101,7 +100,7 @@ class Janitor(
 
         // 임시 사각형 크기. 추후 sprite 로 교체될 때 다시 정한다.
         // Player 가 80x80 사각형이라 그보다 약간 더 크게 그려 위협적인 느낌만 잡아둔다.
-        private const val HALF_WIDTH = 50f
-        private const val HEIGHT = 180f
+        private const val HALF_WIDTH = 150f
+        private const val HEIGHT = 360f
     }
 }

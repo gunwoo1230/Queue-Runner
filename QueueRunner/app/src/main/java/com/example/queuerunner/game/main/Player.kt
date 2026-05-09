@@ -1,9 +1,8 @@
 package com.example.queuerunner.game.main
 
 import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
 import android.graphics.RectF
+import com.example.queuerunner.R
 import android.view.MotionEvent
 import kr.ac.tukorea.ge.spgp2026.a2dg.objects.IBoxCollidable
 import kr.ac.tukorea.ge.spgp2026.a2dg.objects.IGameObject
@@ -38,7 +37,7 @@ class Player(private val gctx: GameContext) : IGameObject, IBoxCollidable {
     private val commandQueue: Queue<String> = LinkedList()
 
     // --- 그리기 도구 ---
-    private val paint = Paint().apply { color = Color.RED }
+    private val bitmap = gctx.res.getBitmap(R.mipmap.gurubox_box)
     // draw() 에서 매 프레임 RectF 를 새로 만들지 않도록 멤버로 선언
     private val rect = RectF()
 
@@ -84,10 +83,8 @@ class Player(private val gctx: GameContext) : IGameObject, IBoxCollidable {
     }
 
     override fun draw(canvas: Canvas) {
-        // ToDo: 플레이어 예쁘게 바꾸기
-        // 중심 아래 기준: 가로 80, 세로 80 크기의 사각형
-        rect.set(screenX - 40f, screenY - 80f, screenX + 40f, screenY)
-        canvas.drawRect(rect, paint)
+        rect.set(screenX - 80f, screenY - 160f, screenX + 80f, screenY)
+        canvas.drawBitmap(bitmap, null, rect, null)
     }
 
 
