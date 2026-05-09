@@ -1,6 +1,5 @@
 package com.example.queuerunner.game.main
 
-import android.util.Log
 import android.view.MotionEvent
 import kr.ac.tukorea.ge.spgp2026.a2dg.scene.Scene
 import kr.ac.tukorea.ge.spgp2026.a2dg.scene.World
@@ -35,6 +34,7 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
     // player.virtualX 의 이전 프레임 값 : 매 프레임 delta 를 구하기 위해 사용
     private var prevVirtualX = 0f
 
+    // isCaught와 GameOverScene을 한번만 처리하고 push하기 위한 플래그
     private var gameOverHandled = false
     override val world = World(Layer.entries.toTypedArray()).apply {
         backgrounds.forEach { (bg, _) -> add(bg, Layer.BG) }
@@ -61,11 +61,7 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
         //    추후 GameOverScene 이 만들어지면 Log 대신 sceneStack.change(GameOverScene(gctx)) 등으로 바꾼다.
         if (janitor.isCaught && !gameOverHandled) {
             gameOverHandled = true
-            Log.d(
-                javaClass.simpleName,
-                "GAME OVER: chaser caught the box at player.virtualX=${player.virtualX}"
-            )
-            // TODO: gctx.sceneStack.change(GameOverScene(gctx))
+            GameOverScene(gctx).push()
         }
 
         // 2. 이번 프레임에 player 가 이동한 가상 거리 계산
