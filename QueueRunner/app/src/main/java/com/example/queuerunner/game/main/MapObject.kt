@@ -3,6 +3,7 @@ package com.example.queuerunner.game.main
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.RectF
+import kr.ac.tukorea.ge.spgp2026.a2dg.objects.IBoxCollidable
 import kr.ac.tukorea.ge.spgp2026.a2dg.objects.IGameObject
 import kr.ac.tukorea.ge.spgp2026.a2dg.objects.IRecyclable
 import kr.ac.tukorea.ge.spgp2026.a2dg.view.GameContext
@@ -13,18 +14,21 @@ import kr.ac.tukorea.ge.spgp2026.a2dg.view.GameContext
 // Janitor 와 동일하게 자기 자신의 virtualX 를 들고, 화면 X 는
 //   PLAYER_SCREEN_X + (virtualX - player.virtualX)
 // 로 매 프레임 계산한다.
-// 박스가 멈춰 있으면 장애물도 같이 멈춰 보여야 자연스러우므로
-// "고정 속도로 흐르는" 방식이 아닌 가상 좌표계 동기화 방식을 쓴다.
+// 박스가 멈춰 있으면 장애물도 같이 멈춰 보이게 만들기 위해 가상 좌표계 동기화 방식을 쓴다.
 //
-// [충돌 검사]
-// 부모는 isHitByLanding(landingVirtualX) 한 가지 메서드만 노출한다.
-// 검사는 점프/슬로우 이동이 시작되기 직전에 한 번 호출되고,
-// 실제 효과는 Player 가 착지한 다음 발동된다.
+// [충돌 방식 - 얇은 띠]
+// 모든 장애물은 IBoxCollidable 을 구현하고 collisionRect 를 가진다.
+// 다만 collisionRect 는 두 가지 조정으로 점프 통과를 자연스럽게 허용한다:
+//   1) Y 축: 지면에 거의 붙은 얇은 띠. groundY - COLLISION_BAND_HEIGHT ~ groundY.
+//      박스가 점프해서 공중에 떠 있을 때는 박스 충돌 박스가 띠보다 위에 있어 안 닿는다.
+//      착지하는 순간에만 박스가 띠와 겹친다.
+//   2) X 축: 그리기 폭의 80% 만 사용하고 좌우로 10% 씩 비운다.
+//      점프 거리가 살짝 부족해서 장애물 끝에 발끝만 살짝 걸치는 경우는
+//      충돌로 보지 않게 해 게임 감각을 부드럽게 만든다.
 //
-// 6 종 지면 장애물이 모두 동일한 "내 X 구간 안에 들어오는가" 검사를 쓰므로,
-// 부모에 그 로직을 open 으로 기본 구현해 둔다.
-// 미래의 새/박쥐 같은 공중 장애물이 등장하면 이 함수를 override 해서
-// false 를 돌려주고, 별도 검사(예: AABB) 를 같은 부모에 추가하는 방향으로 확장한다.
+// 이 단순한 AABB 방식 덕분에 6주차의 모든 장애물이 동일한 검사 흐름을 탄다.
+// 미래에 새 같은 공중 장애물이 추가되어도 collisionRect 의 Y 범위를 점프 높이대에 두면
+// 같은 CollisionChecker 로 처리된다.
 //
 // [재활용]
 // IRecyclable 을 구현하고 World.obtain() ?: new 패턴으로 만든다.
@@ -33,14 +37,14 @@ import kr.ac.tukorea.ge.spgp2026.a2dg.view.GameContext
 // [렌더링]
 // 7~8주차 sprite 가 들어오기 전까지는 debugColor 단색 사각형으로 그린다.
 
-abstract class MapObject : IGameObject, IRecyclable {
+abstract class MapObject : IGameObject, IRecyclable, IBoxCollidable {
 
-    // 박스 참조. recomputeRect() 가 매 프레임 player.virtualX 를 읽어야 하므로 보관한다.
+    // 박스 참조. recomputeRects() 가 매 프레임 player.virtualX 를 읽어야 하므로 보관한다.
     // init(player, virtualX) 이전에는 사용해선 안 된다.
     protected lateinit var player: Player
         private set
 
-    // 가상 좌표계상의 왼쪽 끝 X. 자식 검사 함수는 [virtualX, virtualX + width) 를 본다.
+    // 가상 좌표계상의 왼쪽 끝 X. width 와 같이 보면 장애물이 차지하는 가상 좌표 구간이 된다.
     var virtualX: Float = 0f
         private set
 
@@ -49,15 +53,14 @@ abstract class MapObject : IGameObject, IRecyclable {
     // 1 / 2 / 3 칸. 이 값으로 width 가 자동 계산된다.
     abstract val tileCount: Int
 
-    // 시각적 표현용 높이. tileCount 와 다르게 충돌 판정엔 영향이 없고 보기에만 작용한다.
+    // 시각적 표현용 높이. 충돌 판정엔 영향 없음(충돌은 항상 얇은 띠만 본다).
     // sprite 단계에서 종횡비에 맞게 조정될 예정.
     abstract val height: Float
 
     // 충돌 시 효과. SLOWDOWN 이면 박스가 슬로우 1칸 이동, GAME_OVER 면 게임 종료.
     abstract val effect: HitEffect
 
-    // World 의 어느 layer 에 들어갈지. 거의 다 OBSTACLE 이지만,
-    // 미래의 행인이나 새는 다른 layer 를 쓸 수 있도록 열어둔다.
+    // World 의 어느 layer 에 들어갈지. 거의 다 OBSTACLE.
     abstract val layer: MainScene.Layer
 
     // 임시 디버그 색상. sprite 가 들어오면 사용 안 함.
@@ -69,8 +72,12 @@ abstract class MapObject : IGameObject, IRecyclable {
     val width: Float
         get() = tileCount * BLOCK_SIZE
 
-    // 매 프레임 update() 안에서 다시 계산되는 화면 좌표 사각형. draw() 가 그대로 사용.
-    protected val rect = RectF()
+    // 그리기용 사각형(전체 폭 / 전체 높이). update() 안에서 매 프레임 갱신.
+    protected val drawRect = RectF()
+
+    // 충돌용 사각형(폭의 80% / 지면 띠). update() 안에서 매 프레임 갱신.
+    private val _collisionRect = RectF()
+    override val collisionRect: RectF get() = _collisionRect
 
     // ===================== 재활용 / 초기화 =====================
 
@@ -79,39 +86,39 @@ abstract class MapObject : IGameObject, IRecyclable {
     open fun init(player: Player, virtualX: Float) {
         this.player = player
         this.virtualX = virtualX
-        recomputeRect()
+        recomputeRects()
     }
 
-    private fun recomputeRect() {
+    private fun recomputeRects() {
         val screenX = PLAYER_SCREEN_X + (virtualX - player.virtualX)
-        rect.set(
+
+        // 그리기용 사각형: 전체 폭, 전체 높이
+        drawRect.set(
             screenX,
             GROUND_Y - height,
             screenX + width,
             GROUND_Y,
         )
-    }
 
-    // ===================== 충돌 판정 =====================
-
-    // Player 가 점프 / 슬로우 이동을 시작하기 직전에 호출.
-    // landingVirtualX 는 이번 이동이 끝났을 때 박스 발 밑이 어디 있을지 예측한 가상 좌표이다.
-    //
-    // 기본 구현: 박스 발(점) 이 내 X 구간 [virtualX, virtualX + width) 안에 들어오는가.
-    // 새/박쥐 같은 공중 장애물은 이 함수를 override 해서 false 를 돌려주고,
-    // 별도의 "비행 중 박스와의 충돌" 검사 함수를 추가할 예정이다.
-    open fun isHitByLanding(landingVirtualX: Float): Boolean {
-        return landingVirtualX >= virtualX && landingVirtualX < virtualX + width
+        // 충돌용 사각형: X 는 그리기 폭의 80% 만큼 중앙 정렬, Y 는 지면 얇은 띠
+        val collisionWidth = width * COLLISION_WIDTH_RATIO
+        val collisionLeftPad = (width - collisionWidth) * 0.5f
+        _collisionRect.set(
+            screenX + collisionLeftPad,
+            GROUND_Y - COLLISION_BAND_HEIGHT,
+            screenX + collisionLeftPad + collisionWidth,
+            GROUND_Y,
+        )
     }
 
     // ===================== IGameObject =====================
 
     override fun update(gctx: GameContext) {
-        recomputeRect()
+        recomputeRects()
 
         // 화면 왼쪽 밖으로 완전히 나갔으면 World 에서 제거.
         // World.remove() 가 IRecyclable 을 감지해 자동으로 recycle bin 에 넣어준다.
-        if (rect.right < 0f) {
+        if (drawRect.right < 0f) {
             val scene = gctx.scene as MainScene
             scene.world.remove(this, layer)
         }
@@ -119,14 +126,13 @@ abstract class MapObject : IGameObject, IRecyclable {
 
     override fun draw(canvas: Canvas) {
         debugPaint.color = debugColor
-        canvas.drawRect(rect, debugPaint)
+        canvas.drawRect(drawRect, debugPaint)
     }
 
     // ===================== IRecyclable =====================
 
     override fun onRecycle() {
         // 다음 init(player, virtualX) 에서 모든 상태가 다시 채워지므로 별도 비울 것이 없다.
-        // sprite 애니메이션 상태가 생기면 여기서 초기화한다.
     }
 
     companion object {
@@ -136,6 +142,14 @@ abstract class MapObject : IGameObject, IRecyclable {
 
         // 게임 전체에서 "1칸" 의 길이. Player.blockSize 와 같아야 한다.
         const val BLOCK_SIZE = 200f
+
+        // 충돌 띠 두께. O+X 점프(최소 높이 150f) 정점에서도 박스 발이 띠 위에 있도록
+        // 30f 정도로 얇게 둔다. 부동소수점 오차로 못 잡는 경우를 피할 만큼은 충분히 두껍다.
+        private const val COLLISION_BAND_HEIGHT = 30f
+
+        // 충돌 박스 X 폭 비율 (그리기 폭 대비).
+        // 박스가 장애물 끝에 발끝만 살짝 걸치는 경우를 충돌로 보지 않게 해 감각을 부드럽게.
+        private const val COLLISION_WIDTH_RATIO = 0.8f
 
         private val debugPaint = Paint().apply {
             style = Paint.Style.FILL
