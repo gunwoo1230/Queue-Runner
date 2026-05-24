@@ -17,15 +17,24 @@ import kr.ac.tukorea.ge.spgp2026.a2dg.view.GameContext
 // 1) player.acceptsInput 이 false 면 검사 자체를 건너뛴다.
 //    - 슬로우 1칸 이동 중 / 게임 오버 중 같은 "이미 처리 중" 상황을 의미한다.
 //    - 같은 장애물에 매 프레임 또 충돌 판정되는 것을 막는다.
-// 2) 점프 중에는 박스 collisionRect 가 공중에 떠 있고 장애물 collisionRect 는 지면 띠라서
-//    자연스럽게 무충돌이 된다. 별도 처리가 필요 없다.
-// 3) 첫 충돌에서 applyHit() 가 호출되면 즉시 acceptsInput=false 가 되므로,
+//
+// 2) player.isJumping 이 true 면 검사 자체를 건너뛴다.
+//    - 의미상: 공중에 떠 있는 박스는 지면 장애물에 닿지 않는다.
+//    - 실용상: 점프 끝 직전(velocityY 가 매우 큼) 박스가 한 프레임에
+//      장애물 띠(30f) 안에 머무를 수 있는데, 그 시점 virtualX 는 아직
+//      targetVirtualX 로 Snap 되기 전이라 슬로우 시작 위치가 어긋난다.
+//      점프가 끝나 착지하는 다음 프레임엔 virtualX = targetVirtualX 로 Snap 된 상태이므로
+//      슬로우가 정확한 칸 경계에서 시작된다.
+//
+// 3) 점프 중에는 박스 collisionRect 가 공중에 떠 있고 장애물 collisionRect 는 지면 띠라서
+//    원리상 무충돌이지만, 위 2) 의 안전 가드로 한 번 더 보장한다.
+//
+// 4) 첫 충돌에서 applyHit() 가 호출되면 즉시 acceptsInput=false 가 되므로,
 //    같은 프레임의 후속 장애물에 대한 applyHit 호출은 Player 안의 가드에서 무시된다.
-//    (성능을 더 짜내려면 break 흉내를 낼 수도 있지만, 한 화면에 장애물이 많지 않아 이대로 충분.)
 //
 // [layer 순서]
 // MainScene.Layer 에서 PLAYER 다음에 CONTROLLER 를 두므로
-// 이 update() 는 player.update() 가 박스 위치/충돌 박스를 갱신한 후에 호출된다.
+// 이 update() 는 player.update() 가 박스 위치/충돌 박스/isJumping 을 갱신한 후에 호출된다.
 
 class CollisionChecker(
     private val world: World<MainScene.Layer>,
@@ -33,8 +42,9 @@ class CollisionChecker(
 ) : IGameObject {
 
     override fun update(gctx: GameContext) {
-        // 박스가 이미 충돌 처리 중이면 검사 skip.
+        // 이미 충돌 처리 중이거나 점프 중이면 검사 skip.
         if (!player.acceptsInput) return
+        if (player.isJumping) return
 
         val playerRect = player.collisionRect
 

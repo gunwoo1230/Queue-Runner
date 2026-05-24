@@ -34,7 +34,7 @@ class Janitor(
     // 박스와 아저씨가 그려지는 화면상 기준 좌표.
     // Player 의 screenX, groundY 와 같은 값을 써서 두 캐릭터가 같은 지면 위에 있도록 맞춘다.
     private val playerScreenX = 400f
-    private val groundY = 800f
+    private val groundY = 700f
 
     // 아저씨가 가상 좌표계에서 얼마나 전진했는지를 들고 있는 값이다.
     // 시작 시점에는 박스(virtualX = 0)보다 INITIAL_DISTANCE 만큼 뒤에 있어야 하므로

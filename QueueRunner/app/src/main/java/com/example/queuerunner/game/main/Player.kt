@@ -12,20 +12,24 @@ import java.util.Queue
 class Player(private val gctx: GameContext) : IGameObject, IBoxCollidable {
 
     // --- 화면 렌더링용 고정/가변 좌표 ---
-    // 캐릭터는 화면상 X 위치가 고정된 채, 배경이 밀려나는 방식으로 이동 표현
+    // 캐릭터는 화면상 X 위치가 고정된 채, 배경이 밀려나는 방식으로 이동 표현.
+    // groundY 는 배경 zoom 적용 후의 새 지면 위치에 맞춰 700 으로 설정.
     private val screenX = 400f
-    private val groundY = 800f
+    private val groundY = 700f
     private var screenY = groundY
 
     // --- 배경 스크롤용 가상 X 좌표 ---
     // 이 값을 HorzScrollBackground 의 speed 로 반영해 배경이 캐릭터 이동만큼 뒤로 밀림
-    var virtualX = 0f
+    var virtualX = 100f
         private set
 
     // --- 정상 점프 물리 변수 (startJump 에서 역산하여 채움) ---
-    private var isJumping = false
+    // isJumping 은 CollisionChecker 가 "점프 중에는 검사 skip" 판단에 사용하기 위해
+    // 외부에서 읽을 수 있게 public getter 로 노출한다. 쓰기는 Player 내부에서만.
+    var isJumping = false
+        private set
     private var speedX = 0f
-    private var velocityY = 0f
+    private var velocityY = 00f
     private var gravity = 0f
     private var targetVirtualX = 0f
 
@@ -119,9 +123,9 @@ class Player(private val gctx: GameContext) : IGameObject, IBoxCollidable {
     }
 
     // SLOWDOWN 효과로 진입. 1칸을 SLOW_MOVE_DURATION 초에 걸쳐 미끄러진다.
+    // CollisionChecker 가 isJumping == false 일 때만 호출하므로
+    // 이 시점 virtualX 는 이미 targetVirtualX 로 Snap 되어 정확한 칸 경계에 있다.
     private fun startSlowMove() {
-        // 정상 점프가 막 끝난 직후 호출되므로 점프 상태는 이미 false 여야 한다.
-        // 만약 예외적으로 점프 중에 호출되더라도 안전을 위해 점프 상태를 정리해 둔다.
         isJumping = false
         screenY = groundY
 

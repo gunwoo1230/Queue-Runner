@@ -172,13 +172,13 @@
 - [ ] ~~Item과 충돌 시 Top-View 전환 플래그 활성화 및 타이머(예: 10초) 작동~~
 
 **변경 (Side-View 장애물 + 충돌)**
-- [ ] `MapObject` / `MapObjectRegistry` / `MapObjectCatalog` 활용해 장애물 등록
-- [ ] 1칸 장애물 3종 (쓰레기봉투, 음식물쓰레기통, 고양이)
-- [ ] 2칸 장애물 3종 (웅덩이, 맨홀, 자전거)
-- [ ] 자동차 (횡단보도 멈춤형)
-- [ ] ObjectPool 패턴 적용 (`IRecyclable` / `World.obtain()` 활용)
-- [ ] CollisionChecker 추가
-- [ ] 충돌 효과 분기 (감속 / 즉사 / 대기)
+- [x] `MapObject` / `MapObjectRegistry` / `MapObjectCatalog` 활용해 장애물 등록
+- [x] 1칸 장애물 3종 (쓰레기봉투, 음식물쓰레기통, 고양이)
+- [x] 2칸 장애물 3종 (웅덩이, 맨홀, 자전거)
+- [x] 자동차 (횡단보도 멈춤형)
+- [x] ObjectPool 패턴 적용 (`IRecyclable` / `World.obtain()` 활용)
+- [x] CollisionChecker 추가
+- [x] 충돌 효과 분기 (감속 / 즉사 / 대기)
 
 ---
 

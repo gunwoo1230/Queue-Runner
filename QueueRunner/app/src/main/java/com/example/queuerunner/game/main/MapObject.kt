@@ -63,8 +63,7 @@ abstract class MapObject : IGameObject, IRecyclable, IBoxCollidable {
     // World 의 어느 layer 에 들어갈지. 거의 다 OBSTACLE.
     abstract val layer: MainScene.Layer
 
-    // 임시 디버그 색상. sprite 가 들어오면 사용 안 함.
-    protected abstract val debugColor: Int
+    abstract val mipmapId: Int
 
     // ===================== 부모가 계산하는 값들 =====================
 
@@ -81,11 +80,17 @@ abstract class MapObject : IGameObject, IRecyclable, IBoxCollidable {
 
     // ===================== 재활용 / 초기화 =====================
 
+    // init() 에서 한 번만 로드하고 재활용. 같은 타입을 풀에서 다시 꺼낼 때도 같은 비트맵을 공유.
+    private var bitmap: android.graphics.Bitmap? = null
+
     // ObjectPool 에서 꺼낼 때나 새로 만들 때 모두 동일하게 호출한다.
     // virtualX 위치만 다시 채우면 부모 입장에선 충분히 초기화된다.
-    open fun init(player: Player, virtualX: Float) {
+    open fun init(gctx: GameContext, player: Player, virtualX: Float) {
         this.player = player
         this.virtualX = virtualX
+        if (bitmap == null) {
+            bitmap = gctx.res.getBitmap(mipmapId)
+        }
         recomputeRects()
     }
 
@@ -125,8 +130,7 @@ abstract class MapObject : IGameObject, IRecyclable, IBoxCollidable {
     }
 
     override fun draw(canvas: Canvas) {
-        debugPaint.color = debugColor
-        canvas.drawRect(drawRect, debugPaint)
+        bitmap?.let { canvas.drawBitmap(it, null, drawRect, null) }
     }
 
     // ===================== IRecyclable =====================
@@ -138,7 +142,8 @@ abstract class MapObject : IGameObject, IRecyclable, IBoxCollidable {
     companion object {
         // Player 의 screenX 와 정확히 일치해야 같은 좌표계가 된다.
         const val PLAYER_SCREEN_X = 400f
-        const val GROUND_Y = 800f
+        // 배경 zoom 적용 후의 새 지면 위치. Player.groundY 와 같아야 한다.
+        const val GROUND_Y = 700f
 
         // 게임 전체에서 "1칸" 의 길이. Player.blockSize 와 같아야 한다.
         const val BLOCK_SIZE = 200f
@@ -151,8 +156,6 @@ abstract class MapObject : IGameObject, IRecyclable, IBoxCollidable {
         // 박스가 장애물 끝에 발끝만 살짝 걸치는 경우를 충돌로 보지 않게 해 감각을 부드럽게.
         private const val COLLISION_WIDTH_RATIO = 0.8f
 
-        private val debugPaint = Paint().apply {
-            style = Paint.Style.FILL
-        }
+
     }
 }

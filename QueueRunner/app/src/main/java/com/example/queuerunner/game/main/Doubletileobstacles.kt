@@ -1,6 +1,6 @@
 package com.example.queuerunner.game.main
 
-import android.graphics.Color
+import com.example.queuerunner.R
 
 // 2칸 짜리 장애물 2종.
 //
@@ -21,7 +21,7 @@ class Puddle : MapObject() {
     override val height = 40f
     override val effect = HitEffect.SLOWDOWN
     override val layer = MainScene.Layer.OBSTACLE
-    override val debugColor: Int = Color.rgb(70, 120, 180)   // 파랑
+    override val mipmapId = R.mipmap.gurubox_puddle
 }
 
 // 하수구 맨홀. 빠지면 끝. 검은 구멍 같은 톤.
@@ -31,5 +31,5 @@ class Manhole : MapObject() {
     override val height = 30f
     override val effect = HitEffect.GAME_OVER
     override val layer = MainScene.Layer.OBSTACLE
-    override val debugColor: Int = Color.rgb(20, 20, 20)     // 거의 검정 (구멍)
+    override val mipmapId = 0 //R.mipmap.gurubox_manhole
 }

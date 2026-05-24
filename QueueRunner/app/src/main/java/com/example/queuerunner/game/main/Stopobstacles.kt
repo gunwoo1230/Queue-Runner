@@ -1,6 +1,6 @@
 package com.example.queuerunner.game.main
 
-import android.graphics.Color
+import com.example.queuerunner.R
 
 // 못 지나가는(통과 시 무조건 GAME_OVER) 장애물 모음.
 //
@@ -19,5 +19,5 @@ class Car : MapObject() {
     override val height = 360f
     override val effect = HitEffect.GAME_OVER
     override val layer = MainScene.Layer.OBSTACLE
-    override val debugColor: Int = Color.rgb(30, 30, 30)   // 검정 (자동차 차체)
+    override val mipmapId = 0 // R.mipmap.gurubox_car
 }

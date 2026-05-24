@@ -1,6 +1,6 @@
 package com.example.queuerunner.game.main
 
-import android.graphics.Color
+import com.example.queuerunner.R
 
 // 1칸 짜리 장애물 3종.
 //
@@ -18,7 +18,7 @@ class TrashBag : MapObject() {
     override val height = 140f
     override val effect = HitEffect.SLOWDOWN
     override val layer = MainScene.Layer.OBSTACLE
-    override val debugColor: Int = Color.rgb(210, 190, 60)   // 노랑
+    override val mipmapId = R.mipmap.gurubox_trashbag
 }
 
 // 음식물 쓰레기통. 통 모양이라 좀 더 높고 갈색 톤.
@@ -27,7 +27,7 @@ class FoodWaste : MapObject() {
     override val height = 180f
     override val effect = HitEffect.SLOWDOWN
     override val layer = MainScene.Layer.OBSTACLE
-    override val debugColor: Int = Color.rgb(140, 90, 40)    // 갈색
+    override val mipmapId = R.mipmap.gurubox_foodwaste    // 갈색
 }
 
 // 고양이. 가장 낮고 회색 톤. 살아있는 장애물이라는 점은 sprite 단계에서 살린다.
@@ -36,5 +36,5 @@ class Cat : MapObject() {
     override val height = 110f
     override val effect = HitEffect.SLOWDOWN
     override val layer = MainScene.Layer.OBSTACLE
-    override val debugColor: Int = Color.rgb(120, 120, 130)  // 회색
+    override val mipmapId = R.mipmap.gurubox_cat  // 회색
 }
