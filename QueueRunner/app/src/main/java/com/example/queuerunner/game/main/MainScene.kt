@@ -7,6 +7,11 @@ import kr.ac.tukorea.ge.spgp2026.a2dg.view.GameContext
 import kr.ac.tukorea.ge.spgp2026.a2dg.objects.HorzScrollBackground
 import com.example.queuerunner.R
 
+// 디버그 전환 확인용
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.RectF
 
 class MainScene(gctx: GameContext) : Scene(gctx) {
     // 6주차에서 CONTROLLER 레이어가 추가됨.
@@ -49,6 +54,10 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
     // isCaught / isGameOver 를 한 번만 처리하고 GameOverScene 을 push 하기 위한 플래그.
     private var gameOverHandled = false
 
+    // 디버그 확인용
+    private val debugTopViewRect = RectF(1400f, 0f, 1600f, 100f)
+    private val debugPaint = Paint().apply { color = Color.MAGENTA }
+
     override val world = World(Layer.entries.toTypedArray()).apply {
         backgrounds.forEach { (bg, _) -> add(bg, Layer.BG) }
 
@@ -69,6 +78,15 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
+        // 오른쪽 상단 위를 누르면 시점 전환이 일어나도록 변경 -> 나중에 자동 트리거로 수정
+        if (event.action == MotionEvent.ACTION_DOWN) {
+            val pt = gctx.metrics.fromScreen(event.x, event.y)
+            if (debugTopViewRect.contains(pt.x, pt.y)) {
+                TopViewScene(gctx).change()
+                return true
+            }
+        }
+
         if (controller.onTouchEvent(event)) return true
         return super.onTouchEvent(event)
     }
@@ -95,5 +113,10 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
         backgrounds.forEach { (bg, parallax) ->
             bg.x -= delta * parallax
         }
+    }
+
+    override fun draw(canvas: Canvas) {
+        super.draw(canvas)
+        canvas.drawRect(debugTopViewRect, debugPaint)
     }
 }
