@@ -38,6 +38,7 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
 
     // 관리사무소 아저씨. player 의 virtualX 를 읽어 거리를 계산하므로 player 다음에 만든다.
     val janitor = Janitor(gctx, player)
+    val cleaner = Cleaner(player)
     private val controller = CommandController(gctx, player)
 
     // 배경 (시각 차원에서 일단 가지고 있는 임시 리소스).
@@ -61,6 +62,7 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
     override val world = World(Layer.entries.toTypedArray()).apply {
         backgrounds.forEach { (bg, _) -> add(bg, Layer.BG) }
 
+        add(cleaner, Layer.PLAYER)
         add(player, Layer.PLAYER)
         add(janitor, Layer.PLAYER)
         add(controller, Layer.UI)
@@ -102,6 +104,11 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
         if (!gameOverHandled && (janitor.isCaught || player.isGameOver)) {
             gameOverHandled = true
             GameOverScene(gctx).push()
+        }
+
+        if (!gameOverHandled && player.virtualX >= Cleaner.TRANSITION_X) {
+            TopViewScene(gctx).change()
+            return
         }
 
         // 3. 이번 프레임 박스가 이동한 가상 거리 계산.

@@ -27,10 +27,8 @@ import kr.ac.tukorea.ge.spgp2026.a2dg.view.GameContext
 class TopViewScene(gctx: GameContext) : Scene(gctx) {
 
     val maze = Maze()
-
-    private val debugScrollUpRect = RectF(0f, 0f, 120f, 450f)
-    private val debugScrollDownRect = RectF(0f, 450f, 120f, 900f)
-    private val debugScrollPaint = Paint().apply { color = Color.argb(80, 200, 200, 200) }
+    val topPlayer = TopPlayer(gctx, maze)
+    private val topController = TopCommandController(gctx, topPlayer)
 
     // Top-View 전용 layer. Side-View 의 Layer 와 분리.
     // BG → MAZE(벽/바닥) → JANITOR(환경미화원) → PLAYER → UI
@@ -40,6 +38,8 @@ class TopViewScene(gctx: GameContext) : Scene(gctx) {
 
     override val world = World(Layer.entries.toTypedArray()).apply {
         add(maze, Layer.MAZE)
+        add(topPlayer, Layer.PLAYER)
+        add(topController, Layer.UI)
     }
 
     override val clipsRect = true
@@ -55,9 +55,6 @@ class TopViewScene(gctx: GameContext) : Scene(gctx) {
         canvas.drawRect(0f, 0f, gctx.metrics.width, gctx.metrics.height, bgPaint)
         super.draw(canvas)
 
-        canvas.drawRect(debugScrollUpRect, debugScrollPaint)
-        canvas.drawRect(debugScrollDownRect, debugScrollPaint)
-
         canvas.drawRect(debugBackRect, debugPaint)
     }
 
@@ -68,14 +65,7 @@ class TopViewScene(gctx: GameContext) : Scene(gctx) {
                 MainScene(gctx).change()
                 return true
             }
-            if (debugScrollUpRect.contains(pt.x, pt.y)) {
-                maze.cameraRow = (maze.cameraRow - 1f).coerceAtLeast(0f)
-                return true
-            }
-            if (debugScrollDownRect.contains(pt.x, pt.y)) {
-                maze.cameraRow = (maze.cameraRow + 1f).coerceAtMost((maze.rows - 1).toFloat())
-                return true
-            }
+            if (topController.onTouchEvent(event)) return true
         }
         return super.onTouchEvent(event)
     }
