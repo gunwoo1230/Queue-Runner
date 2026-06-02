@@ -8,6 +8,7 @@ import kr.ac.tukorea.ge.spgp2026.a2dg.objects.IGameObject
 import kr.ac.tukorea.ge.spgp2026.a2dg.view.GameContext
 import java.util.LinkedList
 import java.util.Queue
+import kotlin.math.roundToInt
 
 // Top-View 박스. Side-View 의 Player 와 완전히 별개 클래스.
 //
@@ -36,7 +37,9 @@ class TopPlayer(
         private set
     var cellRow: Int = 0
         private set
-
+    // 출구 셀 캐시. 매 프레임 maze.getExitCell() 호출 피함.
+    private val exitCol: Int
+    private val exitRow: Int
     // 보간 중 부동소수 좌표. 그리기 / 카메라용.
     private var displayCol: Float = 0f
     private var displayRow: Float = 0f
@@ -67,6 +70,9 @@ class TopPlayer(
         displayRow = startRow.toFloat()
         // 카메라 초기 동기화. 안 맞추면 시작 직후 한 프레임 동안 카메라가 튕김.
         maze.cameraRow = startRow.toFloat()
+        val (eCol, eRow) = maze.getExitCell()
+        exitCol = eCol
+        exitRow = eRow
     }
 
     // ===================== 외부 인터페이스 =====================
@@ -78,6 +84,18 @@ class TopPlayer(
 
     // 점프 중에도 큐에 1 개까지 선입력 허용 (Side-View 와 동일 패턴).
     fun canAcceptCommand(): Boolean = acceptsInput && (!isMoving || comboQueue.isEmpty())
+
+    // 출구 셀 위에서 정지 상태일 때 true. TopViewScene 이 폴링해서 전환 트리거에 사용.
+    val hasReachedExit: Boolean
+        get() = !isMoving && cellCol == exitCol && cellRow == exitRow
+
+    // 미화원 BFS 목표용. 보간 중에는 반올림해 "지금 거의 점유 중인 칸" 을 준다.
+    val chaseTargetCol: Int get() = displayCol.roundToInt()
+    val chaseTargetRow: Int get() = displayRow.roundToInt()
+
+    // 잡힘 판정용 박스 중심 (미로 로컬 좌표).
+    val visualCol: Float get() = displayCol
+    val visualRow: Float get() = displayRow
 
     // ===================== 상태 전이 =====================
 
@@ -125,6 +143,11 @@ class TopPlayer(
                 displayRow = cellRow.toFloat()
                 isMoving = false
             }
+            // 출구 도달 직후 입력 잠금. 출구 셀에서 좌/우로 빠져나가는 걸 방지.
+            if (!isMoving && hasReachedExit && acceptsInput) {
+                acceptsInput = false
+                comboQueue.clear()
+            }
         }
 
         // 대기 중이고 큐에 콤보가 있으면 다음 이동 시작.
@@ -155,9 +178,10 @@ class TopPlayer(
 
     companion object {
         // 한 칸 이동에 걸리는 시간. Side-View 의 O+X 점프(0.4초) 와 비슷한 페이스.
-        private const val MOVE_DURATION = 0.3f
+        private const val TOP_PLAYER_SPEED = 600f  // px/s
+        private val MOVE_DURATION = TopViewScene.TILE_SIZE / TOP_PLAYER_SPEED
 
         // 셀(180) 보다 약간 작아서 박스 사이에 시각적 간격이 보이게.
-        private const val PLAYER_SIZE = 140f
+        private const val PLAYER_SIZE = 80f
     }
 }

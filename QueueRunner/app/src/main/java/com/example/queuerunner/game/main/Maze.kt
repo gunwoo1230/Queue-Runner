@@ -20,21 +20,33 @@ import kr.ac.tukorea.ge.spgp2026.a2dg.view.GameContext
 class Maze : IGameObject {
 
     private val data = arrayOf(
-        "#.E.#",  // row 0
-        "#.#.#",  // row 1
-        "#...#",  // row 2
-        "###.#",  // row 3
-        "#...#",  // row 4
-        "#.###",  // row 5
-        "#...#",  // row 6
-        "###.#",  // row 7
-        "#...#",  // row 8
-        "#.#.#",  // row 9
-        "#...#",  // row 10
-        "###.#",  // row 11
-        "#...#",  // row 12
-        "#.###",  // row 13
-        "#.S.#",  // row 14
+        "####E####",  // 0
+        ".........",  // 1
+        ".........",  // 2
+        "##.######",  // 3
+        ".........",  // 4
+        ".........",  // 5
+        ".........",  // 6
+        "###.#####",  // 7
+        ".........",  // 8
+        "......###",  // 9
+        ".........",  // 10
+        "#.#######",  // 11
+        "......###",  // 12
+        ".........",  // 13
+        "......###",  // 14
+        "####.####",  // 15
+        "......###",  // 16
+        "###......",  // 17
+        ".........",  // 18
+        "######.##",  // 19
+        ".........",  // 20
+        "......###",  // 21
+        ".........",  // 22
+        "#####.###",  // 23
+        ".........",  // 24
+        ".........",  // 25
+        "....S....",  // 26
     )
 
     val rows: Int get() = data.size
@@ -61,6 +73,59 @@ class Maze : IGameObject {
             if (col >= 0) return col to row
         }
         return null
+    }
+
+    // (fromCol,fromRow) 에서 (toCol,toRow) 로 가는 최단 경로의 "다음 칸" 하나를 반환.
+    // 벽을 존중하는 4방향 BFS. 경로가 없거나 이미 같은 칸이면 null.
+    // 미화원이 매 프레임 호출해 다음 목표 지점(waypoint)을 갱신한다.
+    // 격자는 27×9 = 243칸이라 매 프레임 BFS 해도 부담 없다.
+    fun nextStepToward(fromCol: Int, fromRow: Int, toCol: Int, toRow: Int): Pair<Int, Int>? {
+        if (fromCol == toCol && fromRow == toRow) return null
+        if (isWall(fromCol, fromRow) || isWall(toCol, toRow)) return null
+
+        val total = rows * cols
+        fun encode(c: Int, r: Int) = r * cols + c
+
+        val prev = IntArray(total) { -1 }
+        val visited = BooleanArray(total)
+        val queue = ArrayDeque<Int>()
+
+        val startCode = encode(fromCol, fromRow)
+        visited[startCode] = true
+        queue.add(startCode)
+
+        val dCol = intArrayOf(0, 0, -1, 1)
+        val dRow = intArrayOf(-1, 1, 0, 0)
+        val goalCode = encode(toCol, toRow)
+        var found = false
+
+        while (queue.isNotEmpty()) {
+            val cur = queue.removeFirst()
+            if (cur == goalCode) { found = true; break }
+            val cc = cur % cols
+            val cr = cur / cols
+            for (i in 0 until 4) {
+                val nc = cc + dCol[i]
+                val nr = cr + dRow[i]
+                if (nc !in 0 until cols || nr !in 0 until rows) continue
+                if (isWall(nc, nr)) continue
+                val code = encode(nc, nr)
+                if (visited[code]) continue
+                visited[code] = true
+                prev[code] = cur
+                queue.add(code)
+            }
+        }
+
+        if (!found) return null
+
+        // goal 에서 prev 를 거꾸로 타고 start 직후 첫 칸을 찾는다.
+        var cur = goalCode
+        while (prev[cur] != startCode) {
+            cur = prev[cur]
+            if (cur == -1) return null  // 방어
+        }
+        return (cur % cols) to (cur / cols)
     }
 
     // ===================== IGameObject =====================
