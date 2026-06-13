@@ -109,7 +109,7 @@ class TopCleaner(
     }
 
     companion object {
-        private const val SPEED = 100f          // 600 * 0.8
+        private const val SPEED = 200f          // 600 * 0.8
         private const val SIZE = 90f            // 박스(80)보다 약간 큼
         private const val CATCH_RATIO = 0.6f
 

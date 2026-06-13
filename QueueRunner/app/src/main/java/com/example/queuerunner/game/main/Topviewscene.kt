@@ -31,6 +31,15 @@ class TopViewScene(gctx: GameContext) : Scene(gctx) {
     val topCleaner = TopCleaner(gctx, maze, topPlayer)
     private val topController = TopCommandController(gctx, topPlayer)
 
+    // 점수판 (이미지 숫자). Top-View 는 위쪽 가운데.
+    private val scoreDisplay = ScoreDisplay(
+        gctx,
+        align = ScoreDisplay.Align.CENTER,
+        anchorX = 800f,
+        top = 40f,
+        charWidth = 50f,
+    )
+
     // Top-View 전용 layer. Side-View 의 Layer 와 분리.
     // BG → MAZE(벽/바닥) → JANITOR(환경미화원) → PLAYER → UI
     enum class Layer {
@@ -42,6 +51,7 @@ class TopViewScene(gctx: GameContext) : Scene(gctx) {
         add(topCleaner, Layer.JANITOR)
         add(topPlayer, Layer.PLAYER)
         add(topController, Layer.UI)
+        add(scoreDisplay, Layer.UI)
     }
 
     // isExitPausing 구간이 향후 출구 애니메이션이 들어갈 슬롯.

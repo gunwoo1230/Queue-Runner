@@ -1,21 +1,19 @@
 package com.example.queuerunner.game.main
 
-import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.RectF
 import android.view.MotionEvent
-import com.example.queuerunner.R
 import kr.ac.tukorea.ge.spgp2026.a2dg.objects.IGameObject
 import kr.ac.tukorea.ge.spgp2026.a2dg.view.GameContext
 
 // Top-View 전용 커맨드 컨트롤러.
 //
-// Side-View 의 CommandController 와 거의 동일한 구조이지만:
-// - TopPlayer 를 참조한다 (Side 의 Player 가 아님).
-// - 미로 위에 겹쳐 그리기 때문에 버튼 배경을 반투명으로 둔다 (옵션 c).
-// - 머리 위 최근 커맨드 아이콘은 일단 생략 (필요하면 step 4 에서 추가).
+// 버튼 아이콘을 박스 이미지 대신 좌/우 화살표로 표시한다.
+//   왼쪽 버튼(O) = ←   /   오른쪽 버튼(X) = →
+// 이동 방향도 버튼과 일치한다 (TopPlayer.startMove 참고):
+//   OO(왼쪽 두 번) → 왼쪽,  XX(오른쪽 두 번) → 오른쪽,  OX/XO → 위.
 class TopCommandController(
     private val gctx: GameContext,
     private val player: TopPlayer,
@@ -28,33 +26,42 @@ class TopCommandController(
     private val btnORect = RectF(200f, 700f, 700f, 850f)
     private val btnXRect = RectF(900f, 700f, 1400f, 850f)
 
-    // 반투명 버튼 (옵션 c). 미로/박스가 비쳐 보이도록 alpha 낮춤.
+    // 반투명 버튼. 미로/박스가 비쳐 보이도록 alpha 낮춤.
     private val btnPaint = Paint().apply { color = Color.argb(100, 30, 30, 30) }
 
-    private val upArrowBitmap = gctx.res.getBitmap(R.mipmap.gurubox_up)
-    private val downArrowBitmap = gctx.res.getBitmap(R.mipmap.gurubox_down)
-    private val btnIconRect = RectF()
-
-    // 아이콘도 약간 투명하게 (그래야 아래 미로/박스랑 자연스럽게 섞임).
-    private val iconPaint = Paint().apply { alpha = 180 }
+    // 버튼 위 화살표. 어두운 반투명 버튼 위라 흰색이 가장 잘 보인다.
+    // (빨간 화살표로 바꾸고 싶으면 Color.rgb(220, 40, 40) 로만 교체하면 된다.)
+    private val arrowPaint = Paint().apply {
+        color = Color.WHITE
+        style = Paint.Style.FILL
+        isAntiAlias = true
+    }
 
     override fun update(gctx: GameContext) {}
 
     override fun draw(canvas: Canvas) {
         canvas.drawRoundRect(btnORect, 30f, 30f, btnPaint)
         canvas.drawRoundRect(btnXRect, 30f, 30f, btnPaint)
-        drawIcon(canvas, upArrowBitmap, btnORect, 0.7f)
-        drawIcon(canvas, downArrowBitmap, btnXRect, 0.7f)
+
+        // 왼쪽 버튼 = ← , 오른쪽 버튼 = →
+        ArrowDrawer.draw(
+            canvas, btnORect.centerX(), btnORect.centerY(),
+            ARROW_W, ARROW_H, ArrowDrawer.Dir.LEFT, arrowPaint,
+        )
+        ArrowDrawer.draw(
+            canvas, btnXRect.centerX(), btnXRect.centerY(),
+            ARROW_W, ARROW_H, ArrowDrawer.Dir.RIGHT, arrowPaint,
+        )
     }
 
     fun onTouchEvent(event: MotionEvent): Boolean {
         if (event.action == MotionEvent.ACTION_DOWN) {
             val pt = gctx.metrics.fromScreen(event.x, event.y)
             if (btnORect.contains(pt.x, pt.y)) {
-                pushCommand(Command.O)
+                pushCommand(Command.X)
                 return true
             } else if (btnXRect.contains(pt.x, pt.y)) {
-                pushCommand(Command.X)
+                pushCommand(Command.O)
                 return true
             }
         }
@@ -74,11 +81,9 @@ class TopCommandController(
         player.enqueueCombo("${c1.name}${c2.name}")
     }
 
-    private fun drawIcon(canvas: Canvas, bitmap: Bitmap, container: RectF, scale: Float) {
-        val size = container.height() * scale
-        val cx = container.centerX()
-        val cy = container.centerY()
-        btnIconRect.set(cx - size / 2f, cy - size / 2f, cx + size / 2f, cy + size / 2f)
-        canvas.drawBitmap(bitmap, null, btnIconRect, iconPaint)
+    companion object {
+        // 좌/우 화살표라 가로로 길쭉하게.
+        private const val ARROW_W = 120f
+        private const val ARROW_H = 70f
     }
 }

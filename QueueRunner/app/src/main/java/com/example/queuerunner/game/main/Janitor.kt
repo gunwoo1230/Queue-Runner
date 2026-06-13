@@ -92,7 +92,7 @@ class Janitor(
     companion object {
         // 가상 좌표계 기준 아저씨가 1초에 전진하는 거리.
         // ToDo: 밸런스를 위해 나중에 조절
-        const val SPEED = 400f
+        const val SPEED = 600f
 
         // 시작 시점에 박스와 아저씨 사이의 가상 거리.
         // ToDo: 추후 시작 지점 만들면 (분리수거장) 변경

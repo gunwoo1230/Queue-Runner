@@ -15,7 +15,7 @@ import com.example.queuerunner.R
 // 종량제 쓰레기봉투. 둥글둥글한 인상이라 살짝 낮고 노란 톤.
 class TrashBag : MapObject() {
     override val tileCount = 1
-    override val height = 140f
+    override val height = 180f
     override val effect = HitEffect.SLOWDOWN
     override val layer = MainScene.Layer.OBSTACLE
     override val mipmapId = R.mipmap.gurubox_trashbag
@@ -33,7 +33,7 @@ class FoodWaste : MapObject() {
 // 고양이. 가장 낮고 회색 톤. 살아있는 장애물이라는 점은 sprite 단계에서 살린다.
 class Cat : MapObject() {
     override val tileCount = 1
-    override val height = 110f
+    override val height = 150f
     override val effect = HitEffect.SLOWDOWN
     override val layer = MainScene.Layer.OBSTACLE
     override val mipmapId = R.mipmap.gurubox_cat  // 회색

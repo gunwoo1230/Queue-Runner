@@ -2,10 +2,8 @@ package com.example.queuerunner.app
 
 import android.content.Intent
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
+import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
-import com.example.queuerunner.BuildConfig
 import com.example.queuerunner.R
 
 class MainActivity : AppCompatActivity() {
@@ -13,11 +11,10 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // 디버그 빌드일 때에는 1초 후 게임 화면으로 바로 넘어가게 한다
-        if (BuildConfig.DEBUG) {
-            Handler(Looper.getMainLooper()).postDelayed({
-                startGameActivity()
-            }, 1000)
+        // "구르기" 버튼을 누르면 게임 화면으로 이동
+        val startButton = findViewById<Button>(R.id.startButton)
+        startButton.setOnClickListener {
+            startGameActivity()
         }
     }
 

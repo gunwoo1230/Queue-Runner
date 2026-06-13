@@ -5,6 +5,7 @@ import kr.ac.tukorea.ge.spgp2026.a2dg.scene.Scene
 import kr.ac.tukorea.ge.spgp2026.a2dg.scene.World
 import kr.ac.tukorea.ge.spgp2026.a2dg.view.GameContext
 import kr.ac.tukorea.ge.spgp2026.a2dg.objects.HorzScrollBackground
+import com.example.queuerunner.BuildConfig
 import com.example.queuerunner.R
 
 // 디버그 전환 확인용
@@ -22,7 +23,7 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
     //   PLAYER 가 자기 점프/슬로우/충돌박스를 갱신한다.
     // - CONTROLLER 가 PLAYER 보다 뒤: 박스가 이번 프레임 위치를 확정한 후
     //   CollisionChecker 가 AABB 검사를 수행한다.
-    // - UI 는 항상 마지막에 그려진다(CommandController 의 조이스틱 등).
+    // - UI 는 항상 마지막에 그려진다(CommandController, ProgressGauge, ScoreDisplay 등).
     enum class Layer {
         BG, FLOOR, ITEM, OBSTACLE, PLAYER, CONTROLLER, UI
     }
@@ -38,8 +39,20 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
 
     // 관리사무소 아저씨. player 의 virtualX 를 읽어 거리를 계산하므로 player 다음에 만든다.
     val janitor = Janitor(gctx, player)
-    val cleaner = Cleaner(player)
+    val cleaner = Cleaner(gctx, player)
     private val controller = CommandController(gctx, player)
+
+    // 상단 진행률 게이지 (Side-View 전용). player/janitor 의 virtualX 를 읽으므로 둘 다음에 만든다.
+    private val progressGauge = ProgressGauge(player, janitor)
+
+    // 점수판 (이미지 숫자). Side-View 는 오른쪽 위.
+    private val scoreDisplay = ScoreDisplay(
+        gctx,
+        align = ScoreDisplay.Align.RIGHT,
+        anchorX = 1560f,
+        top = 28f,
+        charWidth = 40f,
+    )
 
     // 배경 (시각 차원에서 일단 가지고 있는 임시 리소스).
     // scaleFactor = 2f 를 주면 비트맵이 2 배 크기로 그려지며 아래 절반만 화면에 표시된다.
@@ -49,13 +62,18 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
         HorzScrollBackground(gctx, R.mipmap.gurubox_bg_middle, 0f, scaleFactor = 2f) to 1.0f,
     )
 
-    // player.virtualX 의 이전 프레임 값. 매 프레임 delta 를 구해 배경 스크롤에 반영.
-    private var prevVirtualX = 0f
+    // player.virtualX 의 이전 프레임 값. 매 프레임 delta 를 구해 배경 스크롤 / 점수에 반영.
+    // 시작값을 player 의 시작 virtualX 로 맞춰, 첫 프레임에 시작 오프셋(100)이 통째로
+    // delta 로 잡혀 점수/배경이 튀는 것을 막는다.
+    private var prevVirtualX = player.virtualX
+
+    // 1점 미만 누적분. 정수 점수만 GameSession 에 더하고 나머지는 여기 보관한다.
+    private var scoreCarry = 0f
 
     // isCaught / isGameOver 를 한 번만 처리하고 GameOverScene 을 push 하기 위한 플래그.
     private var gameOverHandled = false
 
-    // 디버그 확인용
+    // 디버그 확인용 (배포 빌드에서는 그리지도, 반응하지도 않음 — 아래 BuildConfig.DEBUG 게이트)
     private val debugTopViewRect = RectF(1400f, 0f, 1600f, 100f)
     private val debugPaint = Paint().apply { color = Color.MAGENTA }
 
@@ -66,6 +84,8 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
         add(player, Layer.PLAYER)
         add(janitor, Layer.PLAYER)
         add(controller, Layer.UI)
+        add(progressGauge, Layer.UI)
+        add(scoreDisplay, Layer.UI)
     }
 
     init {
@@ -80,8 +100,9 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
-        // 오른쪽 상단 위를 누르면 시점 전환이 일어나도록 변경 -> 나중에 자동 트리거로 수정
-        if (event.action == MotionEvent.ACTION_DOWN) {
+        // 디버그 빌드에서만: 우상단을 눌러 즉시 Top-View 로 점프 (개발 편의용).
+        // 배포 빌드에서는 player.virtualX >= Cleaner.TRANSITION_X 자동 트리거로만 전환된다.
+        if (BuildConfig.DEBUG && event.action == MotionEvent.ACTION_DOWN) {
             val pt = gctx.metrics.fromScreen(event.x, event.y)
             if (debugTopViewRect.contains(pt.x, pt.y)) {
                 TopViewScene(gctx).change()
@@ -97,25 +118,35 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
         // 1. world 전체(player 포함) 를 update 해서 모든 위치/상태를 최신화.
         super.update(gctx)
 
-        // 2. 게임 오버 트리거 확인.
+        // 2. 이번 프레임 박스가 전진한 가상 거리.
+        val delta = player.virtualX - prevVirtualX
+        prevVirtualX = player.virtualX
+
+        // 3. 점수: Side-View 는 전진 거리에 1:1 로 누적. (1점 미만은 carry 로 보관해 손실 최소화)
+        if (delta > 0f) {
+            scoreCarry += delta
+            val gained = scoreCarry.toInt()
+            if (gained > 0) {
+                GameSession.score += gained
+                scoreCarry -= gained
+            }
+        }
+
+        // 4. 게임 오버 트리거 확인.
         //    - 추격자에게 잡힘 (janitor.isCaught)
         //    - 장애물 GAME_OVER (player.isGameOver) -- 2칸 맨홀 / 3칸 자동차 충돌
-        //    두 경로 모두 동일하게 GameOverScene 으로 전환한다.
         if (!gameOverHandled && (janitor.isCaught || player.isGameOver)) {
             gameOverHandled = true
             GameOverScene(gctx).push()
         }
 
+        // 5. Side → Top 전환.
         if (!gameOverHandled && player.virtualX >= Cleaner.TRANSITION_X) {
             TopViewScene(gctx).change()
             return
         }
 
-        // 3. 이번 프레임 박스가 이동한 가상 거리 계산.
-        val delta = player.virtualX - prevVirtualX
-        prevVirtualX = player.virtualX
-
-        // 4. 배경마다 시차 비율만큼 스크롤.
+        // 6. 배경마다 시차 비율만큼 스크롤 (같은 delta 재사용).
         //    HorzScrollBackground 는 x 가 커질수록 오른쪽으로 밀리므로 -delta 를 더한다.
         backgrounds.forEach { (bg, parallax) ->
             bg.x -= delta * parallax
@@ -124,6 +155,9 @@ class MainScene(gctx: GameContext) : Scene(gctx) {
 
     override fun draw(canvas: Canvas) {
         super.draw(canvas)
-        canvas.drawRect(debugTopViewRect, debugPaint)
+        // 디버그 빌드에서만 마젠타 점프 버튼을 표시.
+        if (BuildConfig.DEBUG) {
+            canvas.drawRect(debugTopViewRect, debugPaint)
+        }
     }
 }

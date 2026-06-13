@@ -71,5 +71,5 @@ object MapObjectCatalog {
 
     // 7단계 ObstacleSpawner 에서 무작위 선택할 때 사용할 6종 타일 문자 목록.
     // CharArray 로 두면 random() 시 박싱(boxing) 이 일어나지 않는다.
-    val ALL_TILES: CharArray = charArrayOf('T', 'F', 'C', 'P', /*'M', 'A'*/)
+    val ALL_TILES: CharArray = charArrayOf('T', 'F', 'C', 'P', 'M', /*'A'*/)
 }

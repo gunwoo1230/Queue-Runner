@@ -143,7 +143,7 @@ abstract class MapObject : IGameObject, IRecyclable, IBoxCollidable {
         // Player 의 screenX 와 정확히 일치해야 같은 좌표계가 된다.
         const val PLAYER_SCREEN_X = 400f
         // 배경 zoom 적용 후의 새 지면 위치. Player.groundY 와 같아야 한다.
-        const val GROUND_Y = 700f
+        const val GROUND_Y = 720f
 
         // 게임 전체에서 "1칸" 의 길이. Player.blockSize 와 같아야 한다.
         const val BLOCK_SIZE = 200f

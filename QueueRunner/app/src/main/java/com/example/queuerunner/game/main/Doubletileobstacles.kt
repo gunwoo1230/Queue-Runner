@@ -18,7 +18,7 @@ import com.example.queuerunner.R
 // 빗물 웅덩이. 바닥에 깔리는 느낌이라 매우 낮고 푸른 톤.
 class Puddle : MapObject() {
     override val tileCount = 2
-    override val height = 40f
+    override val height = 100f
     override val effect = HitEffect.SLOWDOWN
     override val layer = MainScene.Layer.OBSTACLE
     override val mipmapId = R.mipmap.gurubox_puddle
@@ -28,8 +28,8 @@ class Puddle : MapObject() {
 // 시각적으로도 "빠질 만한 구멍" 으로 읽혀야 하므로 height 는 낮게.
 class Manhole : MapObject() {
     override val tileCount = 2
-    override val height = 30f
+    override val height = 100f
     override val effect = HitEffect.GAME_OVER
     override val layer = MainScene.Layer.OBSTACLE
-    override val mipmapId = 0 //R.mipmap.gurubox_manhole
+    override val mipmapId = R.mipmap.gurubox_manhole
 }

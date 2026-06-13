@@ -4,6 +4,7 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.RectF
+import com.example.queuerunner.R
 import kr.ac.tukorea.ge.spgp2026.a2dg.objects.IGameObject
 import kr.ac.tukorea.ge.spgp2026.a2dg.view.GameContext
 
@@ -19,10 +20,12 @@ import kr.ac.tukorea.ge.spgp2026.a2dg.view.GameContext
 //
 // [임시 표현]
 // - 아직 스프라이트 없음. 회색 사각형 placeholder (Side-View Janitor 의 placeholder 와 톤만 다르게).
-class Cleaner(private val player: Player) : IGameObject {
+class Cleaner(private val gctx: GameContext, private val player: Player) : IGameObject {
 
     private val rect = RectF()
     private val paint = Paint().apply { color = Color.rgb(100, 110, 130) }
+
+    private val bitmap = gctx.res.getBitmap(R.mipmap.gurubox_worker)
 
     override fun update(gctx: GameContext) {
         // 정적 NPC. 위치 변동 없음.
@@ -36,8 +39,8 @@ class Cleaner(private val player: Player) : IGameObject {
         if (screenX < -200f || screenX > 1800f) return
 
         // groundY = 700 기준. Player 와 같은 높이대.
-        rect.set(screenX - 70f, 540f, screenX + 70f, 700f)
-        canvas.drawRect(rect, paint)
+        rect.set(screenX - 200, 700 - 360f, screenX + 200, 750f)
+        canvas.drawBitmap(bitmap, null, rect, null)
     }
 
     companion object {

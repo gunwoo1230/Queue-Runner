@@ -14,7 +14,7 @@ import kr.ac.tukorea.ge.spgp2026.a2dg.view.GameContext
 //
 // isTransparent = true 이므로 GameView 가 이 scene 아래의 MainScene 도 함께 그려준다.
 // 그래서 박스, 추격자, 배경은 잡혔을 때의 마지막 모습 그대로 화면에 남고,
-// 그 위에 어두운 막과 GAME OVER 글자, Restart / Exit 버튼이 얹힌다.
+// 그 위에 어두운 막과 GAME OVER 글자, 최종 점수, Restart / Exit 버튼이 얹힌다.
 //
 // SceneStack 은 top scene 에만 update 와 touch 를 보내므로,
 // 이 scene 이 push 되는 순간 MainScene 의 update 는 자연스럽게 멈춘다.
@@ -43,9 +43,18 @@ class GameOverScene(gctx: GameContext) : Scene(gctx) {
     private val subtitleLabel = LabelUtil(60f, Color.LTGRAY, Paint.Align.CENTER)
     private val buttonLabel = LabelUtil(70f, Color.WHITE, Paint.Align.CENTER)
 
+    // 최종 점수(이미지 숫자). 게임오버 시점의 GameSession.score 를 가운데에 표시한다.
+    // 이 Scene 은 world 없이 직접 그리므로 update() 로 갱신하지 않고,
+    // ScoreDisplay 의 init(setValueImmediately) 가 잡아 둔 값을 그대로 그린다.
+    private val scoreDisplay = ScoreDisplay(
+        gctx,
+        align = ScoreDisplay.Align.CENTER,
+        anchorX = 800f,
+        top = 430f,
+        charWidth = 64f,
+    )
+
     // 1600 x 900 가상 좌표계 기준 버튼 위치.
-    // 버튼 두 개를 가로로 나란히 두고, 그 위에 GAME OVER 타이틀을 둔다.
-    // 손가락 탭 영역으로 너무 작지 않도록 폭 400, 높이 150 정도의 큰 박스로 잡았다.
     private val restartRect = RectF(380f, 550f, 780f, 700f)
     private val exitRect = RectF(820f, 550f, 1220f, 700f)
 
@@ -56,12 +65,13 @@ class GameOverScene(gctx: GameContext) : Scene(gctx) {
         canvas.drawRect(gctx.metrics.borderRect, dimPaint)
 
         // 2) 타이틀과 서브타이틀.
-        //    LabelUtil 의 draw 는 Canvas.drawText 와 같은 baseline 기준이라
-        //    y 값을 글자 크기의 약 70~80% 만큼 아래로 내려야 시각적으로 가운데처럼 보인다.
-        titleLabel.draw(canvas, "GAME OVER", 800f, 360f)
-        subtitleLabel.draw(canvas, "박스가 잡혔습니다", 800f, 440f)
+        titleLabel.draw(canvas, "GAME OVER", 800f, 330f)
+        subtitleLabel.draw(canvas, "박스가 잡혔습니다", 800f, 400f)
 
-        // 3) Restart / Exit 버튼 배경과 텍스트.
+        // 3) 최종 점수(이미지 숫자).
+        scoreDisplay.draw(canvas)
+
+        // 4) Restart / Exit 버튼 배경과 텍스트.
         drawButton(canvas, restartRect, "Restart")
         drawButton(canvas, exitRect, "Exit")
     }
@@ -70,13 +80,10 @@ class GameOverScene(gctx: GameContext) : Scene(gctx) {
         canvas.drawRoundRect(rect, 30f, 30f, buttonFillPaint)
         canvas.drawRoundRect(rect, 30f, 30f, buttonStrokePaint)
         // text baseline 보정용 +25f.
-        // 버튼 높이 150 / 글자 크기 70 정도 기준에서 가운데로 보이게 맞춘 값이다.
         buttonLabel.draw(canvas, text, rect.centerX(), rect.centerY() + 25f)
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
-        // ACTION_DOWN 한 번에 바로 반응하는 단순 버튼 처리.
-        // 손가락이 버튼 밖으로 나가도 ACTION_UP 에서 취소되는 식의 정교한 처리는 일단 생략.
         if (event.actionMasked != MotionEvent.ACTION_DOWN) return false
 
         val pt = gctx.metrics.fromScreen(event.x, event.y)
@@ -99,20 +106,17 @@ class GameOverScene(gctx: GameContext) : Scene(gctx) {
     }
 
     private fun restart() {
+        // 새 게임이므로 누적 점수를 0 으로 초기화한 뒤 새 MainScene 으로 간다.
+        GameSession.reset()
+
         // 현재 stack: [MainScene_old, GameOverScene]
-        // 단순히 GameOverScene 만 pop 하면 caught 상태인 MainScene_old 가 그대로 살아 있어
-        // 다시 시작하려면 별도의 reset 로직을 MainScene 에 만들어야 한다.
-        // 그 대신 stack 을 통째로 비우고 새 MainScene 을 push 하면, 모든 상태가 깔끔하게 초기화된다.
-        // popAll(false) 는 onEmptyStack callback 을 호출하지 않으므로 Activity 가 종료되지 않고,
-        // 바로 이어서 push 한 새 MainScene 이 stack 의 유일한 scene 이 된다.
+        // stack 을 통째로 비우고 새 MainScene 을 push 하면 모든 상태가 깔끔하게 초기화된다.
         gctx.sceneStack.popAll(finishesActivity = false)
         gctx.sceneStack.push(MainScene(gctx))
     }
 
     private fun exit() {
         // popAll(true) 는 onEmptyStack callback 을 호출해 Activity.finish() 까지 이어진다.
-        // GameView.init 블록에서 onEmptyStack = { activity?.finish() } 가 등록되어 있어
-        // 별도 Activity 참조 없이도 앱 종료 흐름이 만들어진다.
         gctx.sceneStack.popAll(finishesActivity = true)
     }
 }

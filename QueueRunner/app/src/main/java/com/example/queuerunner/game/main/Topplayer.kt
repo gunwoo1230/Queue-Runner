@@ -142,6 +142,7 @@ class TopPlayer(
                 displayCol = cellCol.toFloat()
                 displayRow = cellRow.toFloat()
                 isMoving = false
+                GameSession.score += SCORE_PER_CELL
             }
             // 출구 도달 직후 입력 잠금. 출구 셀에서 좌/우로 빠져나가는 걸 방지.
             if (!isMoving && hasReachedExit && acceptsInput) {
@@ -183,5 +184,7 @@ class TopPlayer(
 
         // 셀(180) 보다 약간 작아서 박스 사이에 시각적 간격이 보이게.
         private const val PLAYER_SIZE = 80f
+
+        private const val SCORE_PER_CELL = 100
     }
 }
