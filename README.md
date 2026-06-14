@@ -1,257 +1,175 @@
-# 구르박스 (Gureubox) — 2차 발표 자료
+ # 구르박스 (Gureubox) — 기말 발표 자료
 
 > **변경 이력**: ~~Queue-Runner~~ → **구르박스 (Gureubox)**
+> 스마트폰 게임 프로그래밍 (spgp2026) 기말 프로젝트
+
+---
+
+## 🎬 발표 영상
+
+
 
 ---
 
 ## 1. 게임 소개
 
-분리수거장에서 굴러 나온 **박스**가 자신을 잡으러 오는 사람들을 피해 도망치는 **2D 무한 러너** 게임입니다.
+분리수거장에서 굴러 나온 **박스**가, 자신을 잡으러 오는 사람들을 피해 도시 골목을 도망치는 **2D 무한 러너** 게임입니다.
 
-- **핵심 입력 시스템**: O / X 두 개의 버튼으로 이루어지는 **2슬롯 밀어내기 커맨드 큐**. 새 입력이 들어오면 가장 오래된 입력이 밀려나고, 두 칸이 차는 순간 즉시 행동(점프 거리)이 결정됩니다.
-- **시점 구성**: **Side-View 횡스크롤 도주 → Top-View 골목 미로** 두 단계가 무한 반복되는 구조 (현재 발표 시점에서는 Side-View만 구현).
-- **추격 메커닉**: 박스가 장애물에 걸려 느려지면 **관리사무소 아저씨**와의 거리가 줄어들고, 거리가 0이 되면 게임 오버.
-
-플레이어는 박스를 직접 조작하지 않고, **2슬롯 큐로 행동을 지시**합니다. 입력 자체가 게임의 핵심 긴장감 — "다음 칸이 채워지는 순간 박스가 어떻게 움직일지"가 결정됩니다.
+사용자는 커맨드를 조합해 박스를 조작하고 Side-View 도주와 Top-View 미로 탈출을 반복하는 구조입니다.
 
 ---
 
-## 2. 진행 상황 (기능 시스템 단위)
+## 2. 개발 계획 / 일정 / 실제 진행
 
-| 시스템 | 진행도 | 핵심 구현 / 미구현 |
-|---|---:|---|
-| **커맨드 시스템** (O/X 2슬롯 밀어내기 큐) | **100%** | `CommandController`, `pushCommand()`, `fireCommand()`, 버튼 UI, 큐 상태 표시 모두 완료. `Player.canAcceptCommand()` 와 연동된 점프 중 입력 처리도 완료. |
-| **캐릭터 (Player, Side-View)** | **75%** | 가상 X 좌표(`virtualX`) 기반 좌→우 이동, 4종 콤보별 점프 거리/높이/체공시간 분기, 착지 Snap 보정, 박스 비트맵 적용 완료. **남은 작업**: 점프/대기 애니메이션, Top-View 모드 캐릭터, 스프라이트 시트 적용. |
-| **경비아저씨 (Janitor)** | **80%** | 가상 X 좌표 기반 일정 속도 추격, `distance` 계산, `isCaught` latch, GameOverScene 트리거 완료. **남은 작업**: 추격 모션 애니메이션, 환경미화원(미화원) 클래스, 추격 사운드. |
-| **장애물 시스템** | **15%** | `MapObject` 추상 클래스 + `MapObjectRegistry` 골격만 작성됨. `MapObjectCatalog.registerAll()` 은 비어 있음. **남은 작업**: 1칸 3종, 2칸 3종, 멈춤형(자동차) 등록, `CollisionChecker`, 충돌 효과 분기, ObjectPool(`IRecyclable`+`World.obtain()`) 적용. |
-| **시점 전환 (Side ↔ Top-View)** | **0%** | 시점 전환 트리거, Top-View 미로 맵, Top-View 이동 로직, 미화원 추격 AI 모두 미착수. (당초 5주차에서 6주차/7주차로 이월) |
-| **HUD / 점수** | **35%** | `CommandController` 의 큐 상태 표시 + `GameOverScene` 의 GAME OVER / Restart / Exit 버튼 완료. **남은 작업**: 이동 거리 기반 점수 계산, `ImageNumber` HUD 적용, 추격자 거리 게이지(`Gauge`) 표시. |
-| **리소스 / 연출** | **25%** | `gurubox_box`, `gurubox_janitor`, `gurubox_bg`, `gurubox_bg_middle` 적용. 시차(parallax) 스크롤 동작. **남은 작업**: 박스 굴러 나오는 오프닝, 1칸/2칸 장애물 스프라이트, 행인 4종 스프라이트, BGM/효과음. |
+### 2.1. 항목별 계획 대비 진행도
 
-> **전체 평균 (단순 산술)**: 약 **47%**
-> Side-View 핵심 메커닉(입력→이동→추격→게임오버)은 거의 완성, 장애물·시점전환·점수·리소스가 남은 작업의 대부분.
+2차 발표 당시의 기능 시스템 단위를 기준으로 최종 진행 상황을 정리했습니다.
 
----
+| 시스템 | 2차 발표 | 최종 | 남은 부분 |
+|---|---:|---:|---|
+| **커맨드 시스템** (O/X 2슬롯 밀어내기 큐) | 100% | **100%** | |
+| **Side-View 캐릭터 (Player)** | 75% | **약 90%** | 점프/대기 애니메이션(현재 정지 비트맵 1장). |
+| **추격자 (Janitor)** | 80% | **약 90%** |  추격 모션 애니메이션. |
+| **장애물 시스템** | 15% | **약 85%** | 자동차(`Car`)는 스프라이트 미확보 + 밸런스 문제로 현재 스폰 목록에서 제외(정의만 존재) → 실제 출현은 5종. |
+| **시점 전환 (Side ↔ Top-View)** | 0% | **약 85%** |  전환/출구 연출 애니메이션(코드에 슬롯만 존재), 미로 랜덤 생성(현재 고정 레이아웃). |
+| **Top-View 미로** | 0% | **약 85%** |  미로 다양화, 미화원/박스  스프라이트. |
+| **리소스 / 연출** | 25% | **약 50%** | 자동차/행인 스프라이트, 모든 캐릭터 애니메이션, 박스 굴러 나오는 오프닝, TopView 배경 **BGM/효과음**. |
 
-## 3. Git Commit 활동
+### 2.2. 주차별 커밋 횟수 (GitHub 인용)
 
-### 3.1. GitHub Insights 화면
-
-<fiqure>
-    <img src="./image/commit.png"">
-    <figcaption>GitHub Insights - Commits (2024.04.06 ~ 2024.05.10)</figcaption>
-    </figure>
-
-### 3.2. 주차별 Commit 수 (수업 일정 기준)
+<figure>
+  <img src="./image/commit (2).png">
+  <figcaption>GitHub Insights - Commits</figcaption>
+</figure>
 
 | 주차 | 기간 | Commit 수 |
-|---|---|---:|
-| 1주차 | 4/6 ~ 4/12 | _2_ |
-| 2주차 | 4/13 ~ 4/19 | _0_ |
-| 3주차 | 4/20 ~ 4/26 | _4_ |
-| 4주차 | 4/27 ~ 5/3 | _2_ |
-| 5주차 | 5/4 ~ 5/10 | _9_ | 
+|---|---|---|
+| 1주차 | 4/6 ~ 4/12 | 2 |
+| 2주차 | 4/13 ~ 4/19 | 0 |
+| 3주차 | 4/20 ~ 4/26 | 4 |
+| 4주차 | 4/27 ~ 5/3 | 2 |
+| 5주차 | 5/4 ~ 5/10 | 9 |
+| 6주차 | 5/11 ~ 5/17 | 3 |
+| 7주차 | 5/18 ~ 5/24 | 1 |
+| 8주차 | 5/25 ~ 5/31 | 4 |
+| 9주차 | 6/1 ~ 6/7 | 1 |
+| 10주차 | 6/8 ~ 6/14 | 1 |
+| **합계** |  | 27 |
+
+### 2.3. 목표 변경 내용과 이유
+
+2차 발표 이후 변경 없습니다.
 
 ---
 
-## 4. 목표 변경 내용과 이유
+## 3. 사용된 기술 · 참고 · 직접 개발
 
-1차 발표 이후 게임 컨셉을 다음과 같이 변경했습니다.
+### 3.1. 사용된 기술
 
-| 항목 | 기존 (1차 발표) | 변경 (현재) | 변경 이유 |
-|---|---|---|---|
-| **제목** | Queue-Runner | **구르박스 (Gureubox)** | "분리수거장에서 굴러나온 박스"라는 컨셉추가|
-| **타임아웃 메커닉** | 제자리에 머물면 바닥이 무너짐 | **관리사무소 아저씨가 점진적으로 접근**, 거리 0 = 게임오버 | 시간 제한을 컨셉에 맞게 추격자 캐릭터로 대체하면 거리 자체가 곧 긴장감의 게이지가 되어, 별도 UI 없이도 "내가 얼마나 위험한가"가 직관적으로 보임. |
-| **장애물 충돌** | 즉시 게임오버 | **종류별 효과 분기** (1칸 / 2칸 강제 / 자동차 멈춤) | 즉시 게임오버는 학습 곡선이 가파르고 "큐 입력으로 대처한다"는 핵심 재미를 살리기 어려움. 장애물 종류가 입력을 강제하게 만들어 **퍼즐+반응 속도**의 결합을 만들고자 함. |
-| **시점 전환** | 아이템 획득 → Top-View 진입, 타이머 만료 시 복귀 | **Side-View 끝 도달 → Top-View 미로 진입 → 미로 탈출 시 Side-View 복귀**, 무한 반복 | 아이템 기반 전환은 "왜 갑자기 시점이 바뀌는가"의 동기 부여가 약함. 진행 기반 전환으로 바꾸면 골목 → 미로 → 골목의 **공간적 서사**가 생기고, 무한 러너의 단조로움도 줄어듦. |
-| **장애물 종류** | 최소 2종 | **1칸 3종 + 2칸 3종 + 멈춤형 1종 (총 7종)** | 변경된 장애물 메커닉(종류별 효과 분기)에 맞추어 다양성이 필요. |
-| **추격자 / 행인** | 없음 | **관리사무소 아저씨 / 환경미화원 / 행인 4종** 추가 | 추격 메커닉을 시각화하기 위한 필수 캐릭터. 행인은 도시 골목의 분위기 연출. |
+- **언어 / 플랫폼**: Kotlin, Android (AppCompatActivity 기반).
+- **렌더링**: Android `Canvas` 2D 직접 그리기. 비트맵(`drawBitmap`) + `Path`(화살표/말풍선) + `Paint`.
+- **게임 루프**: `Choreographer.FrameCallback`(vsync 기반)으로 매 프레임 `frameTime`(delta time)을 계산해 업데이트.
+- **가상 좌표계**: 실제 해상도와 무관하게 1600×900 가상 좌표계로 그리고, `transformMatrix`로 화면에 맞춤(해상도 독립).
+- **씬/오브젝트 구조**: `Scene` + `World`(레이어별 update/draw 순서 보장) + `SceneStack`(push / pop / change / popAll, 투명 overlay 씬 지원).
+- **메모리/성능**: 장애물 **오브젝트 풀링**(`IRecyclable` + `World.obtain()` 재활용), update/draw hot-path에서 iterator 할당 회피.
+- **알고리즘**: 미로 추격용 **4방향 BFS 최단경로**(`Maze.nextStepToward`), 점프 물리 역산(거리·높이·체공시간 → 속도·중력).
+- **입력**: `MotionEvent`(ACTION_DOWN) 기반 버튼 터치, 좌표는 화면 → 가상 좌표 역변환.
+- **사운드(가용)**: `SoundPool`(효과음) / `MediaPlayer`(BGM) 헬퍼 존재 — 단, 현재 게임에서는 미사용(4.3 참고).
 
-> 핵심 원칙: **모든 변경은 "박스가 도시 골목을 굴러 도망친다"는 단일 컨셉을 강화**하는 방향입니다. 입력 시스템(2슬롯 큐)·점수·게임오버 등 게임플레이 골격은 그대로 유지했습니다.
+### 3.2. 참고한 것들
 
----
+- **레퍼런스 게임**: 쿠키런 류 횡스크롤 러너(가로 비율·지면 점프 감각).
+- **그래픽 리소스**: 박스·아저씨·미화원·배경·장애물·버튼 포즈 등 **모든 이미지 리소스는 AI로 직접 생성**했습니다(외부 에셋 미사용).
+- **수업 예제에서 아이디어만 가져와 다르게 구현한 것**
 
-## 5. Activity 구성
+| 구르박스 | 참고한 수업 예제 (아이디어) | 구르박스에서 바뀐 점 (→ 직접 구현) |
+|---|---|---|
+| `MapObject`(추상) | **CookieRun `MapObject`** — `Sprite` 상속, 좌측 스크롤, `right<0`이면 self-remove, `IRecyclable`+abstract `layer` | `Sprite` 미상속 + **좌표 모델 변경**(`screenX = PLAYER_SCREEN_X + (virtualX − player.virtualX)`로 박스 기준 동기화 → 박스가 멈추면 장애물도 멈춤) + **얇은 띠 충돌** + `effect`/`tileCount` 추가 |
+| `Player` | **CookieRun `Player`** — 화면 고정 + 맵 스크롤 러너, `jump()` 상태기계, `hurt()` 반응 | 점프 구현이 다름: 쿠키런은 `−JUMP_POWER`+일정 중력+바닥 탐지. 구르박스는 **콤보 → (거리·높이·체공) → 속도·중력 역산** 포물선(거리 자체가 핵심) + 단일 지면 + 슬로우/게임오버 효과 |
+| `CollisionChecker` | **CookieRun `CollisionChecker`**(구조·생성자 일치). 동일 컨트롤러 패턴이 DragonFlight·TUDefence에도 등장 | 단일 OBSTACLE만 + **점프/입력 중 스킵 게이트** + `applyHit(effect)` **효과 분기**, ITEM 검사 없음 |
+| `ObstacleSpawner` | **DragonFlight `EnemyGenerator`·TUDefence `WaveGen`**(주기적 wave 스폰) + **CookieRun `MapLoader`**(`Registry.create→world.add(it.layer)`로 화면 앞쪽 생성) | **시간 wave/스테이지 파일 → 이동 거리 임계 + 랜덤 + 종류별 최소 간격** |
+| `Maze`(경로탐색) | **TUDefence `PathFinder`** — 타일 격자 경로탐색(A* + 경로 단순화 + 곡선 waypoint, 적이 *고정 경로* 추종) | **BFS · 4방향 · "다음 한 칸"만 매 프레임 재계산**(이동하는 박스를 *동적 추격*). 고정 경로 A*가 아님 |
+| `GameOverScene` | **TUDefence `PauseScene`** — `isTransparent` 오버레이 Scene + `LabelUtil` + `onBackPressed` + `popAll/pop` | 게임오버 전용: world 없이 직접 그리기 + 어두운 막 + Restart/Exit 버튼 + 최종 점수 |
+| `ScoreDisplay` | **TUDefence `Score`**(=`ImageNumber` 래퍼, 우상단) + DragonFlight `ScoreNumber` | **정렬(RIGHT/CENTER)·중앙 평행이동·씬 간 누적 유지(`GameSession`)** 추가 |
+| `ProgressGauge` | **CookieRun `MapLoader`의 진행 게이지**(`Gauge`를 상단 `200/100/1200`에 표시 — 좌표·크기 동일) + DragonFlight `Gauge` 사용 | 진행 기준을 맵 컬럼 → **박스 전환 진행률** + **박스·추격자 위치 마커** 추가 |
 
-```
-MainActivity (타이틀 화면)
-    │
-    │  BuildConfig.DEBUG → 1초 후 자동 startActivity + finish()
-    │
-    ▼
-QueueRunnerActivity : BaseGameActivity
-    │
-    │  • 디버그 빌드일 때 격자/디버그/FPS 그래프 ON
-    │  • createRootScene() 에서
-    │      - gctx.metrics.setSize(1600f, 900f)   (가로 게임이므로 종횡비 변경)
-    │      - return MainScene(gctx)
-    │
-    ▼
-GameView (BaseGameActivity 가 소유)
-    └─ SceneStack (MainScene 시작 → 필요 시 GameOverScene push)
-```
+### 3.3. 수업 내용에서 차용한 것
 
-- **`MainActivity`**: 단순 타이틀 진입점. `BuildConfig.DEBUG` 일 때 1초 후 게임으로 자동 진입 (개발 편의).
-- **`QueueRunnerActivity`**: 실제 게임이 도는 Activity. `BaseGameActivity` 를 상속해 lifecycle / 풀스크린 / 뒤로가기 처리를 a2dg 프레임워크에 위임.
-- **방향 고정**: AndroidManifest 에서 가로(landscape) 고정 + `metrics.setSize(1600f, 900f)` 로 가상 좌표계도 가로 비율로 변경. (a2dg 기본값 900×1600 → **1600×900 으로 swap**)
+- **`a2dg` 게임 프레임워크 전체 (수업 제공 공용 라이브러리)** — `Scene`/`World`/`SceneStack`, `BaseGameActivity`/`GameView`, `GameContext`/`GameMetrics`(가상 좌표계·`transformMatrix`), `Sprite`/`AnimSprite`/`SheetSprite`/`DrawableSprite`, `ImageNumber`, `Gauge`, `HorzScrollBackground`, `Button`, 인터페이스(`IGameObject`/`IBoxCollidable`/`IRecyclable`/`ITouchable`), `GameResources`/`BitmapPool`/`Sound`, `LabelUtil` 등을 그대로 사용.
+- **`MapObjectRegistry`** — **CookieRun `MapObjectRegistry`와 사실상 100% 동일**(`fun interface MapObjectCreator(gctx, tile, left, top)` 시그니처, `creators` 맵, `register(Char)`/`register(CharRange)`/`create()`까지 주석만 빼면 그대로). *가장 확실한 차용.*
+- **`MapObjectCatalog`** — CookieRun `MapObjectCatalog`와 동일 구조(`object` + `registered` 플래그 + `registerAll()` + `MapObjectRegistry.register(...)` 나열). 타일 문자 집합과 `ALL_TILES`(랜덤 스폰용)만 구르박스 고유.
+- **레이어 enum (`MainScene.Layer`)** — **CookieRun `MainLayer`**의 구성 `BG·FLOOR·ITEM·OBSTACLE·PLAYER·…·CONTROLLER`을 거의 그대로 채택(구르박스가 실제로 안 쓰는 `FLOOR`/`ITEM` 레이어까지 남아 있음). `CONTROLLER` 레이어 패턴은 CookieRun·TUDefence 공통.
+- **게임 Activity 골격 (`QueueRunnerActivity`)** — CookieRun `CookieRunActivity`·TUDefence `MainGameActivity`와 거의 동일(`BaseGameActivity` 상속 + 디버그 플래그 3종 + `createRootScene()`에서 **`metrics.setSize(1600,900)` 가로 설정**). 차이는 stage/cookie intent extra 대신 `GameSession.reset()`.
+- **타이틀 → 게임 Activity 진입 (`MainActivity`)** — 세 예제 공통 패턴(레이아웃 + 시작 버튼 → `startActivity`). 구르박스는 단순화(스테이지/쿠키 선택 없음, `finish()` 추가).
+- **오브젝트 풀링(재활용) 패턴** — 세 예제 공통(`Bullet`/`Enemy`, `Floor`/`JellyItem`/장애물, `Explosion`/`Fly`/`Shell`)의 `companion get() = world.obtain(::class.java) ?: 생성 → init()` + `IRecyclable.onRecycle()` + "화면 밖이면 self-`remove()`" 흐름을 `MapObject`/`MapObjectCatalog`가 그대로 차용.
 
----
+### 3.4. 직접 개발한 것
 
-## 6. Scene 구성 및 전환 관계
+**입력**
+- `CommandController` / `TopCommandController` — **2슬롯 밀어내기 커맨드 큐**, 콤보 발동, 점프/이동 중 선입력 게이트, 머리 위 말풍선·좌우 화살표 UI.
 
-```
-            ┌────────────────────────┐
-            │     MainScene          │
-            │  (Side-View 게임 진행)  │
-            └─────────┬──────────────┘
-                      │
-        janitor.isCaught == true (1회만)
-                      │
-                      ▼  push
-            ┌────────────────────────┐
-            │   GameOverScene        │
-            │ (overlay, transparent) │
-            └────┬───────────────┬───┘
-                 │               │
-        Restart  │               │ Exit / 뒤로가기
-                 ▼               ▼
-   popAll(false) +        popAll(true)
-   push(MainScene 새로)   → onEmptyStack()
-                          → Activity.finish()
-```
+**Side-View 게임플레이**
+- `Player` — **콤보 → 점프 물리 역산**(거리·높이·체공 → 속도·중력), 슬로우 1칸 이동, 게임오버 상태기계.
+- `Janitor` — 거리 기반 일정 속도 추격 + `isCaught` latch.
+- `Cleaner` — 진행 끝에 서서 시점 전환 단서가 되는 정적 NPC.
 
-### 6.1. MainScene
-- a2dg 의 `Scene` 을 상속. `clipsRect = true` 로 가상 좌표계 밖이 클리핑됨.
-- `World<Layer>` 한 개를 소유하고 layer 순서대로 update / draw.
-  - **layer 정의**: `BG → FLOOR → ITEM → OBSTACLE → PLAYER → UI`
-- `update()` 마지막에 `janitor.isCaught` 를 1회만 검사 → `GameOverScene(gctx).push()`.
-- 배경 시차 스크롤: `player.virtualX` 의 프레임 간 delta 를 받아서 `bg.x -= delta * parallax`.
+**장애물 시스템**
+- `Singletileobstacles`(쓰레기봉투·음식물통·고양이) / `Doubletileobstacles`(웅덩이·맨홀) / `Stopobstacles`(자동차) — 6종 구체 장애물.
+- `HitEffect` — 충돌 효과 enum(슬로우 / 게임오버).
 
-### 6.2. GameOverScene
-- `isTransparent = true` → 아래의 MainScene 의 마지막 프레임이 어슴푸레 비치는 **overlay scene**.
-- SceneStack 은 top scene 만 update / touch 처리하므로, **별도 freeze 플래그 없이도** MainScene 의 박스·추격자·배경이 자동으로 정지.
-- 어두운 막 + GAME OVER 타이틀 + Restart / Exit 두 버튼.
-  - **Restart**: `popAll(false)` 로 `onEmptyStack` callback 을 우회 → 새 `MainScene` 을 push.
-  - **Exit**: `popAll(true)` → `onEmptyStack` → `Activity.finish()`.
-  - **뒤로가기**: Exit 와 동일하게 처리 (게임오버 상황에서는 종료가 자연스러움).
+**Top-View 미로**
+- `Maze` — 미로 데이터 + 렌더 + 시야 컬링 + **4방향 BFS 경로탐색**.
+- `TopPlayer` — 셀 단위 보간 이동 + 벽 충돌 + 카메라 동기화.
+- `TopCleaner` — **BFS 기반 미로 추격 AI**.
+- `TopViewScene` — 미로 루프, 출구 도달 판정, Side 복귀.
+
+**씬 흐름 / 드로잉**
+- `GameSession` — **씬 간 누적 점수·사이클 보존** 상태(싱글턴).
+- `ArrowDrawer` — `Canvas` `Path` 단색 화살표(말풍선·버튼 공용).
+- **Side ↔ Top 무한 전환** — `change()` 기반 사이클.
 
 ---
 
-## 7. MainScene 의 게임 오브젝트들
+## 4. 아쉬운 것들
 
-### 7.1. `Player` (PLAYER layer)
+### 4.1. 하고 싶었지만 못 한 것
 
-#### 그림 구성
-- 비트맵: `R.mipmap.gurubox_box` (박스 이미지).
-- 화면상 X 위치는 **항상 `screenX = 400f` 로 고정**, 대신 `virtualX` 가 누적 → 배경이 뒤로 밀리는 방식.
-- Y 좌표는 점프 중에만 변화 (`screenY = groundY (800f)` ↔ 점프 포물선).
-- 충돌 박스는 160×160 (코드 상 `RectF(screenX-80, screenY-160, screenX+80, screenY)`).
+- **사운드(BGM/효과음)**: 프레임워크에 재생 기능이 있는데도 시간상 게임에 연결하지 못해 현재 무음입니다.
+- **캐릭터 애니메이션**: 박스의 점프/구르기, 추격자의 달리기, 박스가 굴러 나오는 오프닝 등 모든 모션이 정지 이미지로 남았습니다.
+- **행인 4종**: 도시 골목 분위기 연출용 행인은 구현하지 못했습니다.
+- **장애물 다양화 / 미로 다양화**: 자동차(넘지 못하는 장애물) 및 미로 랜덤 생성 미완성
+- **시점 전환 연출**: 코드에 슬롯만 두고 페이드/연출 없이 즉시 전환됩니다.
 
-#### 동작 구성
-- **상태**: `isJumping` 한 가지 (대기 ↔ 점프 중).
-- **콤보별 점프 파라미터** (거리 / 높이 / 체공시간):
-  - `OO` → 2칸 (400px) / 250 / 0.5s
-  - `OX`, `XO` → 1칸 (200px) / 150 / 0.4s
-  - `XX` → 3칸 (600px) / 350 / 0.6s
-- **물리**: `startJump()` 에서 입력값(거리·높이·시간)으로부터 `speedX`, `velocityY`, `gravity` 를 **역산**.
-  - `speedX = distance / duration`
-  - `velocityY = -(4 * jumpHeight) / duration`
-  - `gravity = (8 * jumpHeight) / duration²`
-- **착지 Snap**: 프레임 오차 누적을 막기 위해 `screenY >= groundY` 일 때 `virtualX = targetVirtualX` 로 강제 보정.
+### 4.2. (스토어 판매 시) 보충할 것
 
-#### 핵심 코드 (책임)
-```kotlin
-// startJump() : 콤보 → 물리 파라미터 역산 (Player 의 핵심 책임)
-when (combo) {
-    "OO"       -> { distance = blockSize*2; jumpHeight = 250f; jumpDuration = 0.5f }
-    "OX","XO"  -> { distance = blockSize*1; jumpHeight = 150f; jumpDuration = 0.4f }
-    "XX"       -> { distance = blockSize*3; jumpHeight = 350f; jumpDuration = 0.6f }
-}
-targetVirtualX = virtualX + distance
-speedX    = distance / jumpDuration
-velocityY = -(4f * jumpHeight) / jumpDuration
-gravity   = (8f * jumpHeight) / (jumpDuration * jumpDuration)
-```
-이 함수가 곧 "콤보가 어떤 점프를 만드는가"라는 게임의 입력→출력 매핑 전체.
+- 사운드·BGM·햅틱 등 기본 피드백.
+- 타이틀/일시정지/설정 화면, 최고 점수 저장.
+- 점진적 난이도 상승(속도·장애물 밀도)과 튜토리얼.
+- 다양한 미로/배경/장애물, 캐릭터 스킨 등 콘텐츠 볼륨.
+- 광고/결제 등 수익화 요소 및 개인정보·연령 등급 대응.
 
-#### 상호작용
-- **CommandController** → `enqueueCombo("OO" 등)` 로 점프 명령 받음.
-- **CommandController** ← `canAcceptCommand()` 로 "지금 입력 받을 수 있는지" 응답 (점프 중 + 큐 비어있지 않음 → false).
-- **Janitor** ← `player.virtualX` 를 읽어 거리(`distance`) 계산.
-- **MainScene** ← `player.virtualX` 의 프레임 delta 로 배경 시차 스크롤.
+### 4.3. 해결하지 못한 문제
 
-#### UX 진행
-1. 플레이어가 O/X 버튼을 두 번 탭 → CommandController 가 콤보 완성.
-2. Player 의 `commandQueue` 에 enqueue.
-3. 대기 상태이면 다음 프레임에 `startJump()` → 점프 시작.
-4. 점프 중에는 추가 입력이 큐에 쌓이거나, `canAcceptCommand()` 가 false 를 돌려 입력이 차단.
-5. 착지 → 큐에 다음 콤보 있으면 즉시 다음 점프, 없으면 대기.
+- **장애물 조합 알고리즘**: 랜덤 생성시 클리어가 불가능하지 않고 난이도가 어려워지지 않도록 장애물 간 최소 간격을 보장하는 로직이 미완성입니다.
 
+### 4.4. 어려웠던 점
+- **Side-View <-> Top-View 전환**: 씬 전환 방법에 대한 고민과 시도는 많았지만, 결국 `change()`로 매번 새 씬을 만드는 방식으로 구현했습니다.
 ---
 
-### 7.2. `Janitor` (관리사무소 아저씨, PLAYER layer)
+## 5. 수업에 대한 내용 *(발표 영상에도 포함)*
 
-#### 그림 구성
-- 비트맵: `R.mipmap.gurubox_janitor`.
-- 크기: 300×360 (`HALF_WIDTH=150`, `HEIGHT=360`).
-- **화면상 X = `playerScreenX(400) - distance`**: 박스에서 가상 거리만큼 왼쪽으로 떨어진 점에 그림.
-  - 박스가 멀리 도망갈수록 아저씨가 화면 왼쪽으로 멀어짐.
-  - 박스가 멈춰 있으면 점점 박스에 가까워짐 (시각적 긴장감).
+### 5.1. 이번 수업에서 기대한 것 / 얻은 것 / 얻지 못한 것
 
-#### 동작 구성
-- 박스 입력과 **무관하게** 매 프레임 일정한 `SPEED = 400f/s` 로 `virtualX += SPEED * frameTime`.
-- 시작 시점 `virtualX = -700f` (= 박스보다 700px 뒤).
-- `distance = player.virtualX - virtualX` 가 `0` 이하로 떨어지면 `isCaught = true` (한번 true 면 다시 false 안 됨).
+- **기대한 것**: Kotlin으로 Android 게임 개발, 2D 게임 프로그래밍 전반(게임 루프·입력·충돌·씬 관리 등), 간단한 게임 프로젝트 경험.
+- **얻은 것**: Kotlin Android 게임 개발 경험, 2D 게임 프로그래밍 전반에 대한 이해, 간단한 게임 프로젝트 완성 경험, AI로 리소스 생성 및 적용 경험.
+- **얻지 못한 것**: Kotlin의 심화 문법 및 기능들은 아직 이해하지 못했습니다. 게임 디자인 측면에서는 레벨 디자인, 밸런싱, 플레이테스트 등도 경험해보고 싶었지만 시간상 구현과 테스트에 집중하느라 충분히 다뤄보지 못했습니다.
 
-#### 핵심 코드 (책임)
-```kotlin
-override fun update(gctx: GameContext) {
-    if (isCaught) return                       // ① 잡힌 후엔 정지
-    virtualX += SPEED * gctx.frameTime         // ② 일정 속도 전진
-    if (distance <= 0f) isCaught = true        // ③ 한 번만 latch
-}
-```
-"추격자는 일정 속도, 박스는 점프로만 전진" 이라는 게임 룰을 이 6줄이 전부 표현.
+### 5.2. 더 좋은 수업이 되기 위해 변화할 점
 
-#### 상호작용
-- **Player** → `player.virtualX` 를 읽음 (생성자 주입).
-- **MainScene** ← `janitor.isCaught` 가 true 가 되는 첫 프레임에 GameOverScene push.
-- **GameOverScene 등장 후**: SceneStack 이 top 만 update 하므로 Janitor 의 update 자체가 중단됨 → 화면에는 박스에 거의 닿은 모습으로 정지.
+- 타 강의에서 한주에 온라인, 오프라인 혼합 수업을 경험해본 적 있었는데, 이 강의에서 적용하면 좋을 것 같은 부분이 있었습니다.
+	- 예시) 
+		- 온라인 수업 - commit을 따라가며 대략적인 코드 구조와 흐름 설명
+		- 오프라인 - 중요한 부분을 함께 코딩, 다른 방식으로 구현 혹은 commit에 없는 내용 추가
+- 마지막으로 교수님의 AI 리소스 생성 팁을 알 수 있다면 좋을 것 같습니다.
 
-#### UX 진행
-1. 게임 시작 시 화면 왼쪽 바깥 (혹은 가장자리) 에서 박스를 추격.
-2. 박스가 점프로 자주 전진 → distance 유지/증가 → 아저씨가 화면 밖에 머무름.
-3. 박스가 입력이 없거나 장애물에 멈춤 → distance 감소 → 아저씨가 점점 화면 안으로 들어옴.
-4. distance ≤ 0 → `isCaught` → GameOverScene 등장.
-
----
-
-### 7.3. `CommandController` (UI layer)
-
-#### 동작 구성
-- 길이 2 의 `MutableList<Command>` 를 **밀어내기 큐**로 운용:
-  - `queue.size >= 2` 면 `removeAt(0)` 로 가장 오래된 항목 제거 후 `add(cmd)`.
-  - `queue.size == 2` 가 되는 순간 `fireCommand(cmd1, cmd2)` 호출.
-- 터치 처리: `ACTION_DOWN` 만 받음. O/X 버튼 영역에 들어왔을 때만 `pushCommand()` 호출.
-- 입력 게이트: `if (!player.canAcceptCommand()) return` → 점프 중엔 입력 무시.
-
-#### 핵심 코드 (책임)
-```kotlin
-private fun pushCommand(cmd: Command) {
-    if (!player.canAcceptCommand()) return            // ① 입력 게이트
-    if (queue.size >= 2) queue.removeAt(0)            // ② 밀어내기
-    queue.add(cmd)
-    if (queue.size == 2) fireCommand(queue[0], queue[1])  // ③ 발동
-}
-```
-
-#### 상호작용
-- **Player** → `enqueueCombo("OO")` 로 콤보 전달, `canAcceptCommand()` 로 입력 가능 여부 질의.
-- **MainScene.onTouchEvent**: 가장 먼저 controller 에게 touch 를 줘 본 뒤, 처리되지 않으면 World 의 다른 ITouchable 로 dispatch.
-
-#### UX 진행
-- 화면 하단 두 버튼이 항상 보임.
-- 사용자가 한 번 탭 → 큐에 1칸 채워짐 → 화면 상단에 CMD: [ O ] [ _ ] 같이 표시.
-- 한 번 더 탭 → 큐 2칸 → 즉시 콤보 발동, Player 가 점프.
-- 발동 후에도 큐는 유지 → 다음 탭은 가장 오래된 입력을 밀어내며 새 콤보 즉시 완성 (= 연속 콤보).
 ---
